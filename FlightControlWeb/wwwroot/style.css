@@ -1,0 +1,21 @@
+﻿@media (min-width: 768px) {
+    .min-vh-md-50 {
+        min-height: 50% !important;
+    }
+}
+#map {
+    height: 100%;
+    width: 100%;
+}
+.flights-details {
+    background: green;
+    height: 30vh;
+    width: 100%;
+    display: block;
+}
+/* Optional: Makes the sample page fill the window. */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
