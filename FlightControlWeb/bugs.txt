@@ -1,4 +1,4 @@
 unresolved:
 * when zooming out the simble moves out of the location
 
-solved:
+solved:call google and tell them that. idint make that flag, i am just using google maps api
