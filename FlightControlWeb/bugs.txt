@@ -1,0 +1,4 @@
+unresolved:
+* when zooming out the simble moves out of the location
+
+solved:
