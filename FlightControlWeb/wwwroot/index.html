@@ -47,7 +47,7 @@
             const map = new google.maps.Map(document.getElementById('map'), options);
 
             ////Add marker
-            const image = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
+            //const image = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
             //const marker = new google.maps.Marker({
             //    position: { lat: 32.0055, lng: 34.8854 },
             //    map: map,
@@ -56,11 +56,12 @@
             let markers = [
                 {
                     coords: { lat: 32.0055, lng: 34.8854 },
-                    IconImage: image
+                    //IconImage: image
+                    //anchor: 
                 },
                 {
                     coords: { lat: 36.0055, lng: 36.8854 },
-                    IconImage: image
+                    //IconImage: image
                 }
             ];
             for (let i = 0; i < markers.length; i++) {
@@ -73,8 +74,8 @@
                 map: map,
                 icon: props.IconImage
             })
-        }
-
+            }
+            
             //check for custom icon
             if (props.IconImage) {
                 marker.SetIcon(props.IconImage)

@@ -7,15 +7,11 @@ namespace FlightControlWeb
 {
     public class FlightPlan
     {
-        private int _Passengers;
-        private string _Company_Name;
-        Segment _Initial_Location;
-        private List<Segment> SegmentsList;
-        public FlightPlan(int Passengers, string Company_Name, Segment Initial_Location, List<Segment> list) {
-            this._Passengers = Passengers;
-            this._Company_Name = Company_Name;
-            this._Initial_Location = Initial_Location;
-            this.SegmentsList = list;
-        }
+
+        public int Passengers { get; set; }
+        public string Company_Name { get; set; }
+        public Segment Initial_Location { get; set; }
+        public List<Segment> SegmentsList { get; set; }
+      
     }
 }
