@@ -15,7 +15,7 @@ namespace FlightControlWeb
             this._Passengers = Passengers;
             this._Company_Name = Company_Name;
             this._Initial_Location = Initial_Location;
-            this.SegmentsList = list
+            this.SegmentsList = list;
         }
     }
 }

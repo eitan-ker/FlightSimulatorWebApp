@@ -36,25 +36,49 @@
         </div>
     </div>
     <script>
-
         function initMap() {
             //Map options
             const options = {
-                zoom: 7,
+                zoom: 5,
                 center:{ lat: 32.0055, lng: 34.8854 }
             }
 
             //new Map
             const map = new google.maps.Map(document.getElementById('map'), options);
 
-            //Add marker
+            ////Add marker
             const image = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
+            //const marker = new google.maps.Marker({
+            //    position: { lat: 32.0055, lng: 34.8854 },
+            //    map: map,
+            //    icon: image
+            //});
+            let markers = [
+                {
+                    coords: { lat: 32.0055, lng: 34.8854 },
+                    IconImage: image
+                },
+                {
+                    coords: { lat: 36.0055, lng: 36.8854 },
+                    IconImage: image
+                }
+            ];
+            for (let i = 0; i < markers.length; i++) {
+                addMarker(markers[i]);
+            }
+            //Add Marker Function
+        function addMarker(props) {
             const marker = new google.maps.Marker({
-                position: { lat: 32.0055, lng: 34.8854 },
+                position: props.coords,
                 map: map,
-                icon: image
-            });
+                icon: props.IconImage
+            })
+        }
 
+            //check for custom icon
+            if (props.IconImage) {
+                marker.SetIcon(props.IconImage)
+            }
         }
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkZKPOi-H8WkglC5_HbcPMP3DfIeN0YVI&callback=initMap"
