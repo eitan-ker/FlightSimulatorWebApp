@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using FlightControlWeb.Model;
-using Microsoft.AspNetCore.Http;
+﻿using FlightControlWeb.Model;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace FlightControlWeb.Controllers
 {
@@ -17,7 +13,7 @@ namespace FlightControlWeb.Controllers
         // GET: api/ProductsController
         [HttpGet]
         public IEnumerable<Product> GetAllProducts()
-        { 
+        {
             return productsManager.GetAllProducts();
         }
 

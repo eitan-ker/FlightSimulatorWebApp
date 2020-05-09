@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System;
 
 namespace FlightControlWeb.Controllers
 {
@@ -13,12 +9,27 @@ namespace FlightControlWeb.Controllers
     public class FlightsController : ControllerBase
     {
         private IMemoryCache _cache;
-
-        public FlightsController(IMemoryCache memoryCache)
+        public FlightsController(IMemoryCache cache)
         {
-            _cache = memoryCache;
+            this._cache = cache;
         }
-       
+        //DELETE: flightplan/{id}
+        [Route("flights/{id}")]
+        [HttpDelete("{id}")]
+        public IActionResult DeleteFlightByID(string id)
+        {
+            return Ok();
+        }
+        [Route("flights")]
+        [HttpGet("{Date}")]
+        // test get method with Flight array from Postman
+        public IActionResult GetFlightByDate(DateTime relative_to, bool sync_all = false)
+        {
+            if (sync_all)
+            {
 
+            }
+            return Ok();
+        }
     }
 }

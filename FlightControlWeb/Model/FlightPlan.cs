@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace FlightControlWeb
+namespace FlightControlWeb.Model
 {
     public class FlightPlan
     {
-
+        public string ID { get; set; }
         public int Passengers { get; set; }
         public string Company_Name { get; set; }
-        public Segment Initial_Location { get; set; }
-        public List<Segment> SegmentsList { get; set; }
-      
+        public InitialLocation Initial_Location{ get; set; }
+        public List<Segment> Segments { get; set; }
+
     }
 }
