@@ -11,6 +11,7 @@ namespace FlightControlWeb.Controllers
     [ApiController]
     public class FlightPlanController : ControllerBase
     {
+        //POST: api/flightplan
         [Route("flightplan")]
         [HttpPost]
         // test post method with flightplan object from Postman

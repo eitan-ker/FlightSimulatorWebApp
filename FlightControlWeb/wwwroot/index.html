@@ -69,16 +69,16 @@
             }
             //Add Marker Function
         function addMarker(props) {
-            const marker = new google.maps.Marker({
+            let marker = new google.maps.Marker({
                 position: props.coords,
                 map: map,
-                icon: props.IconImage
+                //icon: props.IconImage
+                //check for custom icon
             })
-            }
-            
-            //check for custom icon
             if (props.IconImage) {
                 marker.SetIcon(props.IconImage)
+            }
+
             }
         }
     </script>
