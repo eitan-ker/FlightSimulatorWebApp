@@ -1,4 +1,6 @@
-﻿namespace FlightControlWeb.Model
+﻿using System.Collections.Generic;
+
+namespace FlightControlWeb.Model
 {
     public class FlightManager : IFlightManager
     {
@@ -12,12 +14,12 @@
         public void deleteFlight(string id)
         {
 
-            Flight temp = flights.Where(x => x.FlightID == id).FirstOrDefault();
+            /*Flight temp = flights.Where(x => x.FlightID == id).FirstOrDefault();
             if (temp == null)
             {
                 throw new Exception("product not found");
             }
-            flights.Remove(temp);
+            flights.Remove(temp);*/
         }
 
         public IEnumerable<Flight> GetAllFlights()
@@ -27,19 +29,20 @@
 
         public Flight GetFlightById(string id)
         {
-            Flight temp = flights.Where(x => x.FlightID == id).FirstOrDefault();
-            return temp;
+            /*Flight temp = flights.Where(x => x.FlightID == id).FirstOrDefault();
+            return temp;*/
+            return null;
         }
 
         public void UpdateFlight(Flight temp)
         {
-            Flight _flight = flights.Where(x => x.FlightID == temp.FlightID).FirstOrDefault();
+            /*Flight _flight = flights.Where(x => x.FlightID == temp.FlightID).FirstOrDefault();
             _flight.Date_time = temp.Date_time;
             _flight.FlightID = temp.FlightID;
             _flight.Longitude = temp.Longitude;
             _flight.Latitude = temp.Latitude;
             _flight.Company_name = temp.Company_name;
-            _flight.Is_external = temp.Is_external;
+            _flight.Is_external = temp.Is_external;*/
         }
     }
 }

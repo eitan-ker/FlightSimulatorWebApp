@@ -1,4 +1,6 @@
-﻿namespace FlightControlWeb.Model
+﻿using System.Collections.Generic;
+
+namespace FlightControlWeb.Model
 {
     interface IFlightManager
     {

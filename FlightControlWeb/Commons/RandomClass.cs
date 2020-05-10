@@ -10,7 +10,7 @@ namespace FlightControlWeb.Commons
     {
      
  
-        // Generate a random string with a given size    
+        // Generate a random string with a given size, and at the end add to the string an additional random number between 1 and 999    
         public static string RandomString(int size, bool lowerCase)
         {
             StringBuilder builder = new StringBuilder();
@@ -21,11 +21,11 @@ namespace FlightControlWeb.Commons
                 ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
                 builder.Append(ch);
             }
+            string generatedNumber = (random.Next(1, 999)).ToString();
+            builder.Append(generatedNumber);
             if (lowerCase)
                 return builder.ToString().ToLower();
             return builder.ToString();
         }
-
-    
     }
 }

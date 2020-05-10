@@ -25,15 +25,16 @@ namespace FlightControlWeb.Controllers
             string flightID = RandomGenerator.RandomString(6, true);
 
             flightplan.ID = flightID;
-            if (!_cache.TryGetValue("flightplans", out Dictionary<string, FlightPlan> flightplans))
+            IList<FlightPlan> flightplans;
+            if (!_cache.TryGetValue("flightplans", out flightplans))
             {
-                flightplans = new Dictionary<string, FlightPlan>();
-                flightplans.Add(flightID, flightplan);
+                flightplans = new List<FlightPlan>();
+                flightplans.Add(flightplan);
                 _cache.Set("flightplans", flightplans);
             }
             else
             {
-                flightplans.Add(flightID, flightplan);
+                flightplans.Add(flightplan);
             }
 
             return Ok(flightplan);
@@ -41,6 +42,7 @@ namespace FlightControlWeb.Controllers
         //GET: api/flightplan/{id}
         [Route("FlightPlan/{id}")]
         [HttpGet("{id}")]
+        //test Get method with id as a parameter in order to return flightplan object in the body of the response with the same id 
         public IActionResult GetFlightPlanByID(string id)
         {
             FlightPlan flightplan = LookupFlightByCode(id);
@@ -55,11 +57,18 @@ namespace FlightControlWeb.Controllers
             }
         }
 
+        //helper function with algorithm which generates unique id for testplan
         private FlightPlan LookupFlightByCode(string id)
         {
-            if (_cache.TryGetValue("flightplans", out Dictionary<string, FlightPlan> flightplans))
+            if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
-                return flightplans[id];
+                foreach(var it in flightplans)
+                {
+                    if(string.Compare(it.ID, id) == 0)
+                    {
+                        return it;
+                    }
+                }   
             }
             return null;
         }
