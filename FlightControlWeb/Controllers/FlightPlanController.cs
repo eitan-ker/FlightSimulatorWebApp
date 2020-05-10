@@ -11,7 +11,7 @@ namespace FlightControlWeb.Controllers
     [ApiController]
     public class FlightPlanController : ControllerBase
     {
-        private IMemoryCache _cache;
+        private readonly IMemoryCache _cache;
         public FlightPlanController(IMemoryCache cache)
         {
             this._cache = cache;
@@ -23,21 +23,29 @@ namespace FlightControlWeb.Controllers
         public IActionResult AddFlightPlan(FlightPlan flightplan)
         {
             string flightID = RandomGenerator.RandomString(6, true);
+            Flight curflight = MakeFlight(flightplan, false);
 
             flightplan.ID = flightID;
-            IList<FlightPlan> flightplans;
-            if (!_cache.TryGetValue("flightplans", out flightplans))
+            curflight.FlightID = flightID;
+            if (!_cache.TryGetValue("flightplans", out IList<FlightPlan> flightplans))
             {
-                flightplans = new List<FlightPlan>();
-                flightplans.Add(flightplan);
+                flightplans = new List<FlightPlan>
+                {
+                    flightplan
+                };
+                Dictionary<string, Flight> flightsdictionary = new Dictionary<string, Flight>();
+                flightsdictionary.Add(curflight.FlightID, curflight);
                 _cache.Set("flightplans", flightplans);
+                _cache.Set("flights", flightsdictionary);
             }
             else
             {
                 flightplans.Add(flightplan);
+                _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
+                flights.Add(curflight.FlightID, curflight);
             }
 
-            return Ok(flightplan);
+            return Ok(curflight);
         }
         //GET: api/flightplan/{id}
         [Route("FlightPlan/{id}")]
@@ -71,6 +79,13 @@ namespace FlightControlWeb.Controllers
                 }   
             }
             return null;
+        }
+        //helper function to create Flight object from FlightPlan object
+        private Flight MakeFlight(FlightPlan flightplan, bool is_external)
+        {
+            Flight flight = new Flight(flightplan.ID, flightplan.Initial_Location.Longitude, flightplan.Initial_Location.Latitude,
+                flightplan.Passengers, flightplan.Company_Name, flightplan.Initial_Location.Date_Time, is_external);
+            return flight;
         }
     }
 }
