@@ -34,7 +34,6 @@ namespace FlightControlWeb.Controllers
             List<Server> servers;
             if (!_cache.TryGetValue("servers", out servers))
             {
-
                 servers = new List<Server>();
                 servers.Add(server);
                 _cache.Set("servers", servers);

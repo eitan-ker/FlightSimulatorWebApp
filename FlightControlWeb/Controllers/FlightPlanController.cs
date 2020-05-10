@@ -20,11 +20,12 @@ namespace FlightControlWeb.Controllers
         [Route("flightplan")]
         [HttpPost("{flightplan}")]
         // test post method with flightplan object from Postman
-        public IActionResult AddFlightPlan(FlightPlan flightplan)
+        public IActionResult AddFlightPlan(FlightPlan flightplan, bool isExternal = false)
         {
             string flightID = RandomGenerator.RandomString(6, true);
-            Flight curflight = MakeFlight(flightplan, false);
-
+            Flight curflight = MakeFlight(flightplan, isExternal);
+            //convert to UTC 
+            flightplan.Initial_Location.Date_Time = flightplan.Initial_Location.Date_Time.ToUniversalTime();
             flightplan.ID = flightID;
             curflight.FlightID = flightID;
             if (!_cache.TryGetValue("flightplans", out IList<FlightPlan> flightplans))
@@ -40,6 +41,7 @@ namespace FlightControlWeb.Controllers
             }
             else
             {
+                
                 flightplans.Add(flightplan);
                 _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
                 flights.Add(curflight.FlightID, curflight);
@@ -70,13 +72,8 @@ namespace FlightControlWeb.Controllers
         {
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
-                foreach(var it in flightplans)
-                {
-                    if(string.Compare(it.ID, id) == 0)
-                    {
-                        return it;
-                    }
-                }   
+                return flightplans.Find(f => f.ID == id);
+             
             }
             return null;
         }
