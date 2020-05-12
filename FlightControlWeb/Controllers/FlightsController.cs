@@ -37,101 +37,76 @@ namespace FlightControlWeb.Controllers
             }
             return NotFound();
         }
+        [HttpGet]
+        private void LinearInterpolation(FlightPlan flight, DateTime utcDate)
+        {
+            var segments = flight.Segments.ToList();
+            int totalTimeSpan = segments.Sum(v => v.Timespan_seconds);
+            TimeSpan dif = utcDate.Subtract(flight.Initial_Location.Date_Time);
+            int dif_sec = (int)dif.TotalSeconds;
+            if (totalTimeSpan > dif_sec)
+            {
+                double cameFromLati = flight.Initial_Location.Latitude;
+                double cameFromLong = flight.Initial_Location.Longitude;
+                foreach (Segment element in flight.Segments)
+                {
+
+                    if (dif_sec >= element.Timespan_seconds)
+                    {
+                        dif_sec = dif_sec - element.Timespan_seconds;
+                    }
+                    else
+                    {
+                        double relative = (double)dif_sec / (double)element.Timespan_seconds;
+                        var flights = (IDictionary<string, Flight>)_cache.Get("flights");
+                        flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                        flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                        break;
+                    }
+                    cameFromLati = element.Latitude;
+                    cameFromLong = element.Longitude;
+                }
+            }
+
+        }
         [Route("flights")]
         [HttpGet]
         public IList<Flight> GetFlightByDate(DateTime relative_to, bool sync_all = false)
         {
             List<Flight> flightslist = new List<Flight>();
-            DateTime utcDate = relative_to.ToUniversalTime(); // real time
+            DateTime utcDate = relative_to.ToUniversalTime();
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
-                
+
                 List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g => g.Initial_Location.Date_Time <= utcDate);
                 nonPlannedFlights.ForEach(flight =>
                 {
                     var segments = flight.Segments.ToList();
                     int totalTimeSpan = segments.Sum(v => v.Timespan_seconds);
-                    if(flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
+                    if (flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
                     {
-                        if(_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
+                        if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
                         {
                             if (!sync_all)
                             {
                                 if (!allFlights[flight.ID].Is_external)
                                 {
-                                    TimeSpan dif = utcDate.Subtract(flight.Initial_Location.Date_Time);
-                                    int dif_sec = (int)dif.TotalSeconds;
-                                    if (totalTimeSpan > dif_sec)
-                                    {
-                                        double cameFromLati = flight.Initial_Location.Latitude;
-                                        double cameFromLong = flight.Initial_Location.Longitude;
-                                        foreach (Segment element in flight.Segments)
-                                        {
-                                            
-                                            if (dif_sec >= element.Timespan_seconds)
-                                            {
-                                                dif_sec = dif_sec - element.Timespan_seconds;
-                                            }
-                                            else
-                                            {
-                                                double relative = (double)dif_sec / (double)element.Timespan_seconds;
-                                                allFlights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                                                allFlights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
-                                                break;
-                                            }
-                                            cameFromLati = element.Latitude;
-                                            cameFromLong = element.Longitude;
-                                        }
-                                        flightslist.Add(allFlights[flight.ID]);
-                                    }
+                                    flightslist.Add(allFlights[flight.ID]);
                                 }
+
                             }
                             else
                             {
                                 flightslist.Add(allFlights[flight.ID]);
                             }
-                            
+                            LinearInterpolation(flight, utcDate);
                         }
                     }
                 });
+
                 return flightslist;
             }
             return null;
-                //if (sync_all)
-                //{
-                //    if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
-                //    {
-                //        _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
-                //        foreach (var it in flightplans)
-                //        {
-                //            if(DateTime.Compare(DateTime.Now,it.Initial_Location.Date_Time)==0)
-                //            {
-                //                if (flights.ContainsKey(it.ID))
-                //                {
-                //                    flightslist.Add(flights[it.ID]);
-                //                }
-                //            }
-                //        }
-                //    }
-                //} else
-                //{
-                //    if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
-                //    {
-                //        _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
-                //        foreach (var it in flightplans)
-                //        {
-                //            if (DateTime.Compare(DateTime.Now, it.Initial_Location.Date_Time) == 0)
-                //            {
-                //                if (flights.ContainsKey(it.ID) && flights[it.ID].Is_external == false)
-                //                {
-                //                    flightslist.Add(flights[it.ID]);
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-                return flightslist;
         }
     }
-
 }
