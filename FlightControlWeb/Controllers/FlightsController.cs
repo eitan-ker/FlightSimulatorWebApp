@@ -1,5 +1,6 @@
 ﻿using FlightControlWeb.Model;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace FlightControlWeb.Controllers
         public IList<Flight> GetFlightByDate(DateTime relative_to, bool sync_all = false)
         {
             List<Flight> flightslist = new List<Flight>();
-            DateTime utcDate = relative_to.ToUniversalTime();
+            DateTime utcDate = relative_to.ToUniversalTime(); // real time
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
                 
@@ -58,9 +59,32 @@ namespace FlightControlWeb.Controllers
                             {
                                 if (!allFlights[flight.ID].Is_external)
                                 {
-                                    flightslist.Add(allFlights[flight.ID]);
+                                    TimeSpan dif = utcDate.Subtract(flight.Initial_Location.Date_Time);
+                                    int dif_sec = (int)dif.TotalSeconds;
+                                    if (totalTimeSpan > dif_sec)
+                                    {
+                                        double cameFromLati = flight.Initial_Location.Latitude;
+                                        double cameFromLong = flight.Initial_Location.Longitude;
+                                        foreach (Segment element in flight.Segments)
+                                        {
+                                            
+                                            if (dif_sec >= element.Timespan_seconds)
+                                            {
+                                                dif_sec = dif_sec - element.Timespan_seconds;
+                                            }
+                                            else
+                                            {
+                                                double relative = (double)dif_sec / (double)element.Timespan_seconds;
+                                                allFlights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                                                allFlights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                                                break;
+                                            }
+                                            cameFromLati = element.Latitude;
+                                            cameFromLong = element.Longitude;
+                                        }
+                                        flightslist.Add(allFlights[flight.ID]);
+                                    }
                                 }
-                                  
                             }
                             else
                             {
@@ -109,4 +133,5 @@ namespace FlightControlWeb.Controllers
                 return flightslist;
         }
     }
+
 }

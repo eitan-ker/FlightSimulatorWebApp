@@ -14,6 +14,8 @@ namespace FlightControlWeb.Controllers
         {
             this._cache = cache;
         }
+
+        // GET: /api/servers
         [Route("servers")]
         [HttpGet]
         public List<Server> GetServersList()
@@ -27,6 +29,7 @@ namespace FlightControlWeb.Controllers
                 return servers;
             }
         }
+        // POST: /api/servers
         [Route("servers")]
         [HttpPost("{Server}")]
         public IActionResult AddNewExternalServerToList(Server server)
@@ -44,6 +47,7 @@ namespace FlightControlWeb.Controllers
             }
             return Ok();
         }
+        // DELETE: /api/servers/{id}
         [Route("servers/{ServerID}")]
         [HttpDelete("{ServerID}")]
         // test post method with flightplan object from Postman
