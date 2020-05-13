@@ -71,8 +71,9 @@ namespace FlightControlWeb.Controllers
         }
         [Route("flights")]
         [HttpGet]
-        public IList<Flight> GetFlightByDate(DateTime relative_to, bool sync_all = false)
+        public IList<Flight> GetFlightByDate(DateTime relative_to)
         {
+            bool sync_all = Request.Query.ContainsKey("sync_all");
             List<Flight> flightslist = new List<Flight>();
             DateTime utcDate = relative_to.ToUniversalTime();
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
