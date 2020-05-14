@@ -37,7 +37,6 @@ namespace FlightControlWeb.Controllers
             }
             return NotFound();
         }
-        [HttpGet]
         private void LinearInterpolation(FlightPlan flight, DateTime utcDate)
         {
             var segments = flight.Segments.ToList();
