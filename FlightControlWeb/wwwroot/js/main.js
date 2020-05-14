@@ -10,10 +10,12 @@
 
 async function init(map) {
     active_flights = await getActiveFlights();
-    active_flights.forEach((flight) => {
-        addFlight(flight,map);
-    });
-    console.log(active_flights);
+    if (active_flights) {
+        active_flights.forEach((flight) => {
+            addFlight(flight, map);
+        });
+    }
+    //console.log(active_flights);
 }
 
 function formatDate(date) {
