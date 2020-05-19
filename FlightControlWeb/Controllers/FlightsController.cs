@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FlightControlWeb.Controllers
 {
@@ -37,10 +38,10 @@ namespace FlightControlWeb.Controllers
             }
             return NotFound();
         }
-        private void LinearInterpolation(FlightPlan flight, DateTime utcDate)
+        private async void LinearInterpolation(FlightPlan flight, DateTime utcDate)
         {
             var segments = flight.Segments.ToList();
-            int totalTimeSpan = segments.Sum(v => v.Timespan_seconds);
+            int totalTimeSpan = await Task.Run(() => segments.Sum(v => v.Timespan_seconds));
             TimeSpan dif = utcDate.Subtract(flight.Initial_Location.Date_Time);
             int dif_sec = (int)dif.TotalSeconds;
             if (totalTimeSpan > dif_sec)
