@@ -1,7 +1,10 @@
 ﻿using FlightControlWeb.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
 
 namespace FlightControlWeb.Controllers
 {
@@ -39,6 +42,8 @@ namespace FlightControlWeb.Controllers
             {
                 servers = new List<Server>();
                 servers.Add(server);
+                string request = server.ServerUrl + "/api/Flights?relative_to=2020-12-26T23:58:21Z";
+                string data = Get(request);
                 _cache.Set("servers", servers);
             }
             else
@@ -47,6 +52,19 @@ namespace FlightControlWeb.Controllers
             }
             return Ok();
         }
+        private string Get(string uri)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (Stream stream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                return reader.ReadToEnd();
+            }
+        }
+
         // DELETE: /api/servers/{id}
         [Route("servers/{ServerID}")]
         [HttpDelete("{ServerID}")]
