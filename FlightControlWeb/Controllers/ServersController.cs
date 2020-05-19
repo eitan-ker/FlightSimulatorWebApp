@@ -42,13 +42,15 @@ namespace FlightControlWeb.Controllers
             {
                 servers = new List<Server>();
                 servers.Add(server);
-                string request = server.ServerUrl + "/api/Flights?relative_to=2020-12-26T23:58:21Z";
-                string data = Get(request);
+                //string request = server.ServerUrl + "/api/Flights?relative_to=2020-12-26T23:58:21Z";
+                //string data = Get(request);
                 _cache.Set("servers", servers);
             }
             else
             {
-                servers.Add(server);
+                if(servers.Find(o => o.ServerId == server.ServerId) == null) {
+                    servers.Add(server);
+                }
             }
             return Ok();
         }
@@ -77,6 +79,8 @@ namespace FlightControlWeb.Controllers
             }
             else
             {
+                /*Server curserver = servers.Find(o => o.ServerId == ServerID);
+                servers.Remove(curserver);*/
                 foreach(var it in servers)
                 {
                     if (string.Compare(it.ServerId, ServerID) == 0)
