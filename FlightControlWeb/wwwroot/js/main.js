@@ -1,9 +1,16 @@
 ﻿let active_flights = [];
 
+let flightPath = null;
+let map = null;
 (function () {
     window.addEventListener('load', () => {
-
-        const map = initMap();
+       map = initMap();
+        flightPath = new google.maps.Polyline({
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+        });
         init(map);
     });
 })();
@@ -13,7 +20,9 @@ async function init(map) {
     if (active_flights) {
         active_flights.forEach((flight) => {
             addFlight(flight, map);
+
         });
+        showFlightList(active_flights);
     }
     //console.log(active_flights);
 }
@@ -63,6 +72,21 @@ async function getActiveFlights() {
 
     return await $.ajax(settings);
 }
+async function getActiveFlightplan(id) {
+    
+    //$.ajax(`https://localhost:44383/api/Flights?relative_to=${currentDate}`).done((data) => {
+       //console.log(data);
+    //})
+    //should be: 2020-05-13T17:54:30
+    let geturl = "/api/FlightPlan/" + id;
+    let settingss = {
+        "url": geturl,
+        "method": "GET",
+        "timeout": 0,
+    };
+
+    return await $.ajax(settingss);
+}
 function initMap() {
     //Map options
     const options = {
@@ -76,6 +100,9 @@ function initMap() {
     const map = new google.maps.Map(document.getElementById('map'), options);
     map.addListener('click', (e) => {
         $(".flights-details").empty();
+        if (flightPath) {
+            flightPath.setMap(null);
+        }
     })
     return map;
 }
@@ -88,8 +115,9 @@ function initMap() {
 //});
 
 
+
 //Add Marker Function
-function addFlight(flight,gmap) {
+function addFlight(flight, gmap) {
     const iconImage = '../images/plane.png';
     const marker = new google.maps.Marker({
         position: new google.maps.LatLng(flight.latitude, flight.longitude),
@@ -98,107 +126,77 @@ function addFlight(flight,gmap) {
         title: flight.company_name + '-' + flight.flightID
         //check for custom icon
     })
-    marker.addListener('click', function () {
-       // 1. you need to fetch the data from webapi of the flight plan
-        showFlightDetails(flight);
+    marker.addListener('click', async function () {
+        // 1. you need to fetch the data from webapi of the flight plan
+        showFlightDetailsByID(flight.flightID,gmap);
     });
-   
+}
+async function showFlightDetailsByID(flightId,gmap) {
+    const curflightplan = await getActiveFlightplan(flightId);
+    paintFlightPath(curflightplan, gmap);
+    showFlightDetails(curflightplan)
+    
+}
+function paintFlightPath(flightPlan, gmap) {
+    const flightPlanCoordinates = [];
+    flightPlanCoordinates.push({ lat: flightPlan.initial_Location.latitude, lng: flightPlan.initial_Location.longitude });
+    flightPlan.segments.forEach((segment) => {
+        flightPlanCoordinates.push({ lat: segment.latitude, lng: segment.longitude });
+    });
+    flightPath.setMap(null);
+    flightPath.setPath(flightPlanCoordinates);
+    flightPath.setMap(gmap);
 }
 
-function showFlightList() {
-    //build a ul element
-    //get the flights from server  flight id + company name
-    // //for each flight, run on the array and create a li element
-    //the li element will show the company name and flight id
+function showFlightList(flightList) {
+    $(".myflight-list").empty();
+    const ul = document.createElement("ul");
+    ul.classList.add("flights");
+    flightList.forEach((flight) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a href="#">X</a>`;
+        li.id = flight.flightID;
+        ul.append(li);
+    });
+    $(".myflight-list").append(ul);
 
 }
-function showFlightDetails(flight) {
+function showFlightDetails(flightplan) {
     $(".flights-details").empty();
     const table = document.createElement("table");
     table.border = "1";
     table.width="100%"
     const row = table.insertRow(0);
-    const fromLocation_header = row.insertCell(0);
-    const toLocation_header = row.insertCell(1);
-    const companyName_header = row.insertCell(2);
-    const passengers_header = row.insertCell(3);
+    const ID_header = row.insertCell(0);
+    const fromLocation_header = row.insertCell(1);
+    const toLocation_header = row.insertCell(2);
+    const companyName_header = row.insertCell(3);
+    const passengers_header = row.insertCell(4);
+    ID_header.innerHTML = "Flight ID"
     fromLocation_header.innerHTML = "From Location";
     toLocation_header.innerHTML =   "To Location";
     companyName_header.innerHTML = "Company Name";
     passengers_header.innerHTML = "# of Passengers";
     const row2 = table.insertRow(1);
-    const fromLocation = row2.insertCell(0);
-    const toLocation = row2.insertCell(1);
-    const companyName = row2.insertCell(2);
-    const passengers = row2.insertCell(3);
-    fromLocation.innerHTML = "Lat:" + flight.latitude + " Long:" + flight.longitude;
-    toLocation.innerHTML = "TBD";
-    companyName.innerHTML = `<b>${flight.company_name}</b>`;
-    passengers.innerHTML = flight.passengers;
+    const ID = row2.insertCell(0);
+    const fromLocation = row2.insertCell(1);
+    const toLocation = row2.insertCell(2);
+    const companyName = row2.insertCell(3);
+    const passengers = row2.insertCell(4);
+    let flightplansegment = flightplan.segments;
+    let final_destination = flightplansegment[flightplansegment.length - 1]; 
+    let initial_location = flightplan.initial_Location;
+    ID.innerHTML = flightplan.id;
+    fromLocation.innerHTML = "Lat:" + initial_location.latitude + " Long:" + initial_location.longitude;
+    toLocation.innerHTML = "Lat:" + final_destination.latitude + " Long:" + final_destination.longitude
+    companyName.innerHTML = `<b>${flightplan.company_Name}</b>`;
+    passengers.innerHTML = flightplan.passengers;
     $(".flights-details").append(table);
-
 }
-Dropzone.options.myDropzone = {
-    dictDefaultMessage: "Drag & drop images here to upload",
-    init: function () {
-        var myDropzone = this;
-
-        this.on("drop", function (event) {
-            var imageUrl = event.dataTransfer.getData('URL');
-            var fileName = imageUrl.split('/').pop();
-
-            // set the effectAllowed for the drag item
-            event.dataTransfer.effectAllowed = 'copy';
-
-            function getDataUri(url, callback) {
-                var image = new Image();
-
-                image.onload = function () {
-                    var canvas = document.createElement('canvas');
-                    canvas.width = this.naturalWidth; // or 'width' if you want a special/scaled size
-                    canvas.height = this.naturalHeight; // or 'height' if you want a special/scaled size
-
-                    canvas.getContext('2d').drawImage(this, 0, 0);
-
-                    // Get raw image data
-                    // callback(canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, ''));
-
-                    // ... or get as Data URI
-                    callback(canvas.toDataURL('image/jpeg'));
-                };
-
-                image.setAttribute('crossOrigin', 'anonymous');
-                image.src = url;
-            }
-
-            function dataURItoBlob(dataURI) {
-                var byteString,
-                    mimestring
-
-                if (dataURI.split(',')[0].indexOf('base64') !== -1) {
-                    byteString = atob(dataURI.split(',')[1])
-                } else {
-                    byteString = decodeURI(dataURI.split(',')[1])
-                }
-
-                mimestring = dataURI.split(',')[0].split(':')[1].split(';')[0]
-
-                var content = new Array();
-                for (var i = 0; i < byteString.length; i++) {
-                    content[i] = byteString.charCodeAt(i)
-                }
-
-                return new Blob([new Uint8Array(content)], {
-                    type: mimestring
-                });
-            }
-
-            getDataUri(imageUrl, function (dataUri) {
-                var blob = dataURItoBlob(dataUri);
-                blob.name = fileName;
-                myDropzone.addFile(blob);
-            });
-        });
-
-    } // init
-} // Dropzone
+$(".myflight-list").on('click', (event) => {
+    const flightID = event.target.id;
+    if (flightID) {
+        showFlightDetailsByID(flightID,map);
+    }
+    
+})

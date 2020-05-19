@@ -7,15 +7,43 @@
     height: 100%;
     width: 100%;
 }
-.flights-details {
+.flights-details-bar {
     background: green;
     height: 30vh;
-    width: 100%;
+    width: 70%;
     display: block;
+    overflow: hidden;
+    float: left;
+}
+.flights-details {
+    width: 100%;
+    background: green;
+    display: block;
+    overflow: hidden;
+    float: left;
+}
+.myflight-bar {
+    
+}
+.externalflight-bar {
+
 }
 /* Optional: Makes the sample page fill the window. */
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+}
+.dropzone {
+    float: left;
+    width: 30%;
+    height: 30vh;
+    border: 2px dashed #ccc;
+    color: #ccc;
+    line-height: 30px;
+    text-align: center;
+}
+.dropzone.dragover {
+    border-color:#000;
+    color:#000;
 }

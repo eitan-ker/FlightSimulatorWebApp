@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace FlightControlWeb.Controllers
 {
@@ -17,7 +18,7 @@ namespace FlightControlWeb.Controllers
             this._cache = cache;
         }
         //POST: api/flightplan
-        [Route("flightplan")]
+        /*[Route("flightplan")]
         [HttpPost("{flightplan}")]
         // test post method with flightplan object from Postman
         public IActionResult AddFlightPlan(FlightPlan flightplan, bool isExternal = false)
@@ -48,7 +49,45 @@ namespace FlightControlWeb.Controllers
             }
 
             return Ok(curflight);
+        }*/
+
+
+        [Route("flightplan")]
+        [HttpPost("{flightplan}")]
+        // test post method with flightplan object from Postman
+        public ActionResult AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
+        {
+            foreach (var flightplan in flightplansparameter)
+            {
+                string flightID = RandomGenerator.RandomString(6, true);
+                Flight curflight = MakeFlight(flightplan, isExternal);
+                //convert to UTC 
+                flightplan.Initial_Location.Date_Time = flightplan.Initial_Location.Date_Time.ToUniversalTime();
+                flightplan.ID = flightID;
+                curflight.FlightID = flightID;
+                if (!_cache.TryGetValue("flightplans", out IList<FlightPlan> flightplans))
+                {
+                    flightplans = new List<FlightPlan>
+                {
+                    flightplan
+                };
+                    Dictionary<string, Flight> flightsdictionary = new Dictionary<string, Flight>();
+                    flightsdictionary.Add(curflight.FlightID, curflight);
+                    _cache.Set("flightplans", flightplans);
+                    _cache.Set("flights", flightsdictionary);
+                }
+                else
+                {
+
+                    flightplans.Add(flightplan);
+                    _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
+                    flights.Add(curflight.FlightID, curflight);
+                }
+            }
+            return Ok();
         }
+
+
         //GET: api/flightplan/{id}
         [Route("FlightPlan/{id}")]
         [HttpGet("{id}")]
@@ -66,6 +105,9 @@ namespace FlightControlWeb.Controllers
                 return NotFound();
             }
         }
+
+
+
 
         //helper function with algorithm which generates unique id for testplan
         private FlightPlan LookupFlightByCode(string id)

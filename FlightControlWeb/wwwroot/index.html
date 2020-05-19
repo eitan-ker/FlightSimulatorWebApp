@@ -7,6 +7,7 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>Bootstrap 101 Template</title>
     <!-- Bootstrap -->
+    <link rel="shortcut icon" href="favicon.ico">
     <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -27,19 +28,18 @@
                     </div>
                 </div>
                 <div class="row flex-sm-grow-1 bg-success">
-                    <form id="my-dropzone" class="dropzone" enctype="multipart/form-data">
-                        <div class="dropzone-previews"></div>
-                        <div class="fallback">
-                            <input name="image" type="file" />
-                        </div>
-                    </form>
-                    <div class="flights-details">
-
+                    <div id="uploads"></div>
+                    <div class="dropzone" id="dropzone">Drop Upload your Files Here</div>
+                    <div class="flights-details-bar">
+                        <h2>Flight Details</h2>
+                        <div class="flights-details">  </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 d-flex flex-column bg-info">
-                
+                <div class="myflight-bar">My Flights</div>
+                <div class="myflight-list"></div>
+                <div class="externalflight-bar">External Flights</div>
 
             </div>
         </div>
