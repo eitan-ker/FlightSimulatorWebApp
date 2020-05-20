@@ -1,10 +1,14 @@
 ﻿using FlightControlWeb.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace FlightControlWeb.Controllers
 {
@@ -38,34 +42,125 @@ namespace FlightControlWeb.Controllers
         public IActionResult AddNewExternalServerToList(Server server)
         {
             List<Server> servers;
-            if (!_cache.TryGetValue("servers", out servers))
+            try
             {
-                servers = new List<Server>();
-                servers.Add(server);
-                //string request = server.ServerUrl + "/api/Flights?relative_to=2020-12-26T23:58:21Z";
-                //string data = Get(request);
-                _cache.Set("servers", servers);
-            }
-            else
-            {
-                if(servers.Find(o => o.ServerId == server.ServerId) == null) {
+                if (!_cache.TryGetValue("servers", out servers))
+                {
+                    servers = new List<Server>();
                     servers.Add(server);
+                    _cache.Set("servers", servers);
+                    importExternalFlights(server.ServerUrl.ToString());
+                }
+                else
+                {
+                    if (servers.Find(o => o.ServerId == server.ServerId) == null)
+                    {
+                        servers.Add(server);
+                        importExternalFlights(server.ServerUrl.ToString());
+                    }
+                }
+                return Ok();
+            } 
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+        }
+        private void importExternalFlights(string URL)
+        {
+            string parsedURL = parseURL(URL);
+            string request_str = parsedURL + "/api/Flights?relative_to=";
+            DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
+            string CurTime = parseTime(utcDate.ToString());
+            request_str = request_str + CurTime;
+
+            WebRequest request = WebRequest.Create(request_str);
+            request.Method = "GET";
+            HttpWebResponse response = null;
+            response = (HttpWebResponse)request.GetResponse();
+            string strResult = "";
+            List<Flight> external_flights;
+            using (Stream stream = response.GetResponseStream())
+            {
+                StreamReader sr = new StreamReader(stream);
+                strResult = sr.ReadToEnd();
+                external_flights = makeList(strResult);
+                sr.Close();
+            }
+
+            // save in cache
+
+        }
+
+        private string parseTime(string time)
+        {
+            string[] words = time.Split(' ');
+            int count = 0;
+            string parsedTime = "";
+            foreach (var word in words)
+            {
+                if (count == 0)
+                {
+                    string[] date = word.Split('/');
+                    parsedTime = date[2] + "-" + date[1] + "-" + date[0] + "T";
+                }
+                if (count == 1)
+                {
+                    parsedTime = parsedTime + word + "Z";
+                    break;
+                }
+                count++;
+            }
+            return parsedTime;
+        }
+
+        private string parseURL(string URL)
+        {
+            string parsedURL = "";
+            string[] words = URL.Split('/');
+            int counter = 0;
+            foreach (var word in words)
+            {
+                if (word.Equals(""))
+                {
+                    parsedURL = parsedURL + "//";
+                } else
+                {
+                    parsedURL = parsedURL + word;
+                }
+                counter++;
+                if (counter == 3)
+                {
+                    break;
                 }
             }
-            return Ok();
+            return parsedURL;
         }
-        private string Get(string uri)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-            using (Stream stream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(stream))
+        private List<Flight> makeList(string json)
+        {
+            try
             {
-                return reader.ReadToEnd();
+                List<Flight> all_flights = new List<Flight>();
+                JArray json_convert = JsonConvert.DeserializeObject<JArray>(json);
+                foreach (var elem in json_convert.Children())
+                {
+                    Flight external_flight = new Flight();
+                    foreach (JProperty flight in elem.Children())
+                    {
+                        external_flight.setFlight(flight.Name.ToString(), flight.First.ToString());
+                    }
+                    all_flights.Add(external_flight);
+                }
+                return all_flights;
+            } 
+            catch (Exception e)
+            {
+                throw e;
             }
-        }
+            
+        } 
 
         // DELETE: /api/servers/{id}
         [Route("servers/{ServerID}")]

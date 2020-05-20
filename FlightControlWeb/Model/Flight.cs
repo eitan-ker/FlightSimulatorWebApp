@@ -1,10 +1,43 @@
 ﻿using FlightControlWeb.Model;
 using System;
+using System.Collections.Generic;
 
 namespace FlightControlWeb
 {
     public class Flight
     {
+        public void setFlight(string name, string value)
+        {
+            if (name.Equals("flightID")) 
+            {
+                this.FlightID = value;
+            }
+            if (name.Equals("longitude")) 
+            {
+                this.Longitude = Convert.ToDouble(value);
+            }
+            if (name.Equals("latitude")) 
+            {
+                this.Latitude = Convert.ToDouble(value);
+            }
+            if (name.Equals("passengers")) 
+            {
+                this.Passengers = Convert.ToInt32(value);
+            }
+            if (name.Equals("company_name")) 
+            {
+                this.Company_name = value;
+            }
+            if (name.Equals("date_time")) 
+            {
+                this.Date_time = Convert.ToDateTime(value);
+            }
+            if (name.Equals("is_external")) 
+            {
+                this.Is_external = true;
+            }
+        }
+        public Flight() { } // default constructor
         public Flight(string FlightID, double Longitude, double Latitude, int Passengers, string Company_name, DateTime Date_time, bool Is_external)
         {
             this.FlightID = FlightID;
