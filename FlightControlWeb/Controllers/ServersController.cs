@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
@@ -90,7 +91,25 @@ namespace FlightControlWeb.Controllers
             }
 
             // save in cache
+            saveExternalFlights(external_flights);
 
+        }
+
+        private void saveExternalFlights(List<Flight> flights)
+        {
+            List<Flight> external_flights;
+            if (!_cache.TryGetValue("externalFlights", out external_flights))
+            {
+                external_flights = flights;
+                _cache.Set("externalFlights", flights);
+            }
+            else
+            {
+                foreach (Flight flight in flights)
+                {
+                    external_flights.Add(flight);
+                }
+            }
         }
 
         private string parseTime(string time)
@@ -144,6 +163,7 @@ namespace FlightControlWeb.Controllers
             {
                 List<Flight> all_flights = new List<Flight>();
                 JArray json_convert = JsonConvert.DeserializeObject<JArray>(json);
+                // throws exception when server has no flights - stops program
                 foreach (var elem in json_convert.Children())
                 {
                     Flight external_flight = new Flight();
