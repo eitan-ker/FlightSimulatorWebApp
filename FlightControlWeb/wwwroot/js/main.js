@@ -1,5 +1,5 @@
 ﻿let active_flights = [];
-
+let allMarkers = [];
 let flightPath = null;
 let map = null;
 (function () {
@@ -18,14 +18,27 @@ let map = null;
 async function init(map) {
     active_flights = await getActiveFlights();
     if (active_flights) {
+        removemarkertrails();
         active_flights.forEach((flight) => {
-            addFlight(flight, map);
 
+            addFlight(flight, map);
         });
         showFlightList(active_flights);
     }
+    
+    setTimeout(init, 1000, map);
     //console.log(active_flights);
 }
+function removemarkertrails() {
+    for (let i = 0; i < allMarkers.length; i = i + 1) {
+        /*if (allMarkers[i].title == flight.company_name + '-' + flight.flightID) {
+            allMarkers[i].setMap(null);
+        }*/
+        allMarkers[i].setMap(null);
+
+    }
+}
+
 
 function formatDate(date) {
     let d = new Date(date),
@@ -104,6 +117,7 @@ function initMap() {
             flightPath.setMap(null);
         }
     })
+    
     return map;
 }
 ////Add marker
@@ -130,6 +144,7 @@ function addFlight(flight, gmap) {
         // 1. you need to fetch the data from webapi of the flight plan
         showFlightDetailsByID(flight.flightID,gmap);
     });
+    allMarkers.push(marker);
 }
 async function showFlightDetailsByID(flightId,gmap) {
     const curflightplan = await getActiveFlightplan(flightId);
