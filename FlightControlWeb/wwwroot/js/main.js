@@ -17,19 +17,26 @@ let map = null;
 
 async function init(map) {
     active_flights = await getActiveFlights();
-    if (active_flights) {     
+    if (active_flights) {
+        removemarkertrails();
         active_flights.forEach((flight) => {
-            for (let i = 0; i < allMarkers.length; i = i + 1) {
-                if (allMarkers[i].title == flight.company_name + '-' + flight.flightID) {
-                    allMarkers[i].setMap(null);
-                }
-            }
+
             addFlight(flight, map);
         });
         showFlightList(active_flights);
     }
+    
     setTimeout(init, 1000, map);
     //console.log(active_flights);
+}
+function removemarkertrails() {
+    for (let i = 0; i < allMarkers.length; i = i + 1) {
+        /*if (allMarkers[i].title == flight.company_name + '-' + flight.flightID) {
+            allMarkers[i].setMap(null);
+        }*/
+        allMarkers[i].setMap(null);
+
+    }
 }
 
 
