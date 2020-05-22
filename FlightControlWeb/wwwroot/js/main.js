@@ -163,7 +163,58 @@ function paintFlightPath(flightPlan, gmap) {
     flightPath.setMap(gmap);
 }
 
-function showFlightList(flightList) {
+async function showFlightList(flightList) {
+    let internalFlights = await getinternalFLights(flightList);
+    if (internalFlights) {
+        showinternalFlightList(internalFlights);
+    }
+    let externalFlights = await getexternalFLights(flightList);
+    if (externalFlights) {
+        showexternalFlightList(externalFlights);
+    }
+   //let internalFLights = await showinternalFlightList(flightList);
+    //showexternalFlightList(flightList);
+}
+function getinternalFLights(flightlist) {
+    let internalFlights = [];
+    if (flightlist) {
+        flightlist.forEach((flight) => {
+            if (flight.is_external == false) {
+                internalFlights.push(flight);
+            }
+        });
+    }
+    /*for (var flight in flightlist) {
+        if (flight.is_external == false) {
+                internalFlights.push(flight);
+          }
+    }*/
+    return internalFlights;
+}
+function getexternalFLights(flightlist) {
+    let externalFlights = [];
+    if (flightlist) {
+        flightlist.forEach((flight) => {
+            if (flight.is_external == true) {
+                externalFlights.push(flight);
+            }
+        });
+    }
+    return externalFlights;
+}
+function showexternalFlightList(flightList) {
+    $(".exflight-list").empty();
+    const ul = document.createElement("ul");
+    ul.classList.add("exflights");
+    flightList.forEach((flight) => {
+        const li = document.createElement("li");
+        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a href="#">X</a>`;
+        li.id = flight.flightID;
+        ul.append(li);
+    });
+    $(".exflight-list").append(ul);
+}
+function showinternalFlightList(flightList) {
     $(".myflight-list").empty();
     const ul = document.createElement("ul");
     ul.classList.add("flights");
