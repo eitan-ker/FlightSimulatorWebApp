@@ -92,9 +92,43 @@ namespace FlightControlWeb.Controllers
 
             // save in cache
             saveExternalFlights(external_flights);
+            saveExternalFlightPlans(external_flights, parsedURL);
 
         }
 
+        private void saveExternalFlightPlans(List<Flight> external_flights, string URL)
+        {
+            string request_str = URL + "/api/FlightPlan/";
+            foreach (Flight flight in external_flights)
+            {
+                WebRequest request = WebRequest.Create(request_str + flight.FlightID);
+                request.Method = "GET";
+                HttpWebResponse response = null;
+                response = (HttpWebResponse)request.GetResponse();
+                string strResult = "";
+                using (Stream stream = response.GetResponseStream())
+                {
+                    StreamReader sr = new StreamReader(stream);
+                    strResult = sr.ReadToEnd();
+                    saveExternalFlightPlans(strResult);
+                    sr.Close();
+                }
+            }
+        }
+        private void saveExternalFlightPlans(string flightPlanStr)
+        {
+            List<FlightPlan> flightPlans;
+            FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
+            if (!_cache.TryGetValue("flightPlan", out flightPlans))
+            {
+                flightPlans = new List<FlightPlan>();
+                flightPlans.Add(flightPlan);
+                _cache.Set("externalFlights", flightPlans);
+            } else
+            {
+                flightPlans.Add(flightPlan);
+            }
+        }
         private void saveExternalFlights(List<Flight> flights)
         {
             List<Flight> external_flights;
