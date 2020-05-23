@@ -208,7 +208,7 @@ function showexternalFlightList(flightList) {
     ul.classList.add("exflights");
     flightList.forEach((flight) => {
         const li = document.createElement("li");
-        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a href="#">X</a>`;
+        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
         li.id = flight.flightID;
         ul.append(li);
     });
@@ -220,12 +220,23 @@ function showinternalFlightList(flightList) {
     ul.classList.add("flights");
     flightList.forEach((flight) => {
         const li = document.createElement("li");
-        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a href="#">X</a>`;
+        let curflightID = flight.flightID;
+        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
         li.id = flight.flightID;
         ul.append(li);
     });
     $(".myflight-list").append(ul);
 
+}
+async function deleteflightAfterPressingX(id) {
+    let deleteurl = "https://localhost:44383/api/Flights/" + id;
+    let settingss = {
+        "url": deleteurl,
+        "method": "DELETE",
+        "timeout": 0,
+    };
+
+    await $.ajax(settingss);
 }
 function showFlightDetails(flightplan) {
     $(".flights-details").empty();

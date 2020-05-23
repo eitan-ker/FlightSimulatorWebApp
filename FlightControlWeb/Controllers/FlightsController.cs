@@ -37,10 +37,6 @@ namespace FlightControlWeb.Controllers
                         _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
                         flights.Remove(id);
                         return Ok();
-                    } else
-                    {
-                        //flightplan given as a parameter doesnt exist in DB
-                        return NotFound();
                     }
                 }
             }
