@@ -57,14 +57,16 @@ namespace FlightControlWeb.Controllers
         // test post method with flightplan object from Postman
         public ActionResult AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
         {
+            //loop through the collection given as a parameter
             foreach (var flightplan in flightplansparameter)
             {
-                string flightID = RandomGenerator.RandomString(6, true);
-                Flight curflight = MakeFlight(flightplan, isExternal);
+                string flightID = RandomGenerator.RandomString(6, true);//generate a unique ID for flightplan
+                Flight curflight = MakeFlight(flightplan, isExternal);// make flight base on flight plan
                 //convert to UTC 
                 flightplan.Initial_Location.Date_Time = flightplan.Initial_Location.Date_Time.ToUniversalTime();
                 flightplan.ID = flightID;
                 curflight.FlightID = flightID;
+                //check if object with name flightsplans exists in memcache. if not we create one
                 if (!_cache.TryGetValue("flightplans", out IList<FlightPlan> flightplans))
                 {
                     flightplans = new List<FlightPlan>
@@ -73,10 +75,12 @@ namespace FlightControlWeb.Controllers
                 };
                     Dictionary<string, Flight> flightsdictionary = new Dictionary<string, Flight>();
                     flightsdictionary.Add(curflight.FlightID, curflight);
+                    //add List in the name of flightplans and dictionary named flights to memcache
                     _cache.Set("flightplans", flightplans);
                     _cache.Set("flights", flightsdictionary);
                 }
                 else
+                //flightsplans exists in memcache, therefore flights dictionary exist also so we can add flight to dictionary without hasitation
                 {
 
                     flightplans.Add(flightplan);

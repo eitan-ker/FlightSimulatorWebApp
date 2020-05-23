@@ -28,11 +28,13 @@ namespace FlightControlWeb.Controllers
         [HttpGet]
         public List<Server> GetServersList()
         {
+            //if key with name "servers" doesnt exist in memcache, the create it and value will be list
             if (!_cache.TryGetValue("servers", out List<Server> servers))
             {
                 return null;
             }
             else
+            //else return the list of servers from memcache to client
             {
                 return servers;
             }
@@ -45,26 +47,46 @@ namespace FlightControlWeb.Controllers
             List<Server> servers;
             try
             {
+                //if key with name "servers" doesnt exist in memcache, the create it and value will be list
                 if (!_cache.TryGetValue("servers", out servers))
                 {
-                    servers = new List<Server>();
-                    servers.Add(server);
+                    servers = new List<Server>
+                    {
+                        //add the server object given as a parameter to "servers" list 
+                        server
+                    };
+                    //create the "servers" list in memcache
                     _cache.Set("servers", servers);
+                    //add flight and respective flightplan from the external server to the memcache DB
                     importExternalFlights(server.ServerUrl.ToString());
                 }
                 else
                 {
+                    //handle case when client try to insert server and memcache DB exists and "servers" data structure exists in memcache
                     if (servers.Find(o => o.ServerId == server.ServerId) == null)
                     {
+                        //add the server to "servers" list in memcache
                         servers.Add(server);
+                        //add the flight from the server
                         importExternalFlights(server.ServerUrl.ToString());
+                    }
+                    else
+                    {
+                        //handle case when the user try to insert server with existing ID in DB, then i wont let him to do that
                     }
                 }
                 return Ok();
             } 
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                if (_cache.TryGetValue("servers", out servers))
+                {
+                    if (servers.Find(o => o.ServerId == server.ServerId) != null)
+                    {
+                        servers.Remove(server);
+                    }
+                }
+                return BadRequest();
             }
 
         }
@@ -209,9 +231,9 @@ namespace FlightControlWeb.Controllers
                 }
                 return all_flights;
             } 
-            catch (Exception e)
+            catch (Exception)
             {
-                throw e;
+                return null;
             }
             
         } 
