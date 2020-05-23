@@ -88,7 +88,6 @@ namespace FlightControlWeb.Controllers
                 }
                 return BadRequest();
             }
-
         }
         private void importExternalFlights(string URL)
         {
