@@ -65,8 +65,11 @@ namespace FlightControlWeb.Controllers
                     {
                         double relative = (double)dif_sec / (double)element.Timespan_seconds;
                         var flights = (IDictionary<string, Flight>)_cache.Get("flights");
-                        flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                        flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                        if (flights.ContainsKey(flight.ID))
+                        {
+                            flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                            flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                        }
                         break;
                     }
                     cameFromLati = element.Latitude;
