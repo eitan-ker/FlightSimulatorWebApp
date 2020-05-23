@@ -113,7 +113,7 @@ namespace FlightControlWeb.Controllers
 
             // save in cache
             saveExternalFlights(external_flights);
-            saveExternalFlightPlans(external_flights, parsedURL);
+            //saveExternalFlightPlans(external_flights, parsedURL);
 
         }
 
