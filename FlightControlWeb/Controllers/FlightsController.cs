@@ -23,21 +23,31 @@ namespace FlightControlWeb.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteFlightByID(string id)
         {
+            //check if data structure name "flightplans" exist in memcache , create it
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
+                /*loop throgh flight plans in datasctruture and find the requested flightplan, if it exist then delete it from the flightplans 
+                 * data structure, remove both flightplan and respective flight*/
                 foreach (var it in flightplans)
                 {
+                    //remove b
                     if (string.Compare(it.ID, id) == 0)
                     {
                         flightplans.Remove(it);
                         _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
                         flights.Remove(id);
                         return Ok();
+                    } else
+                    {
+                        //flightplan given as a parameter doesnt exist in DB
+                        return NotFound();
                     }
                 }
             }
+            //there isnt a datastructure name "flightplans" in memcache
             return NotFound();
         }
+        //linear interpolation function to calculate relative distance the plane flew to the destination of the current segment
         private async void LinearInterpolation(FlightPlan flight, DateTime utcDate)
         {
             var segments = flight.Segments.ToList();
@@ -71,6 +81,7 @@ namespace FlightControlWeb.Controllers
         }
         [Route("flights")]
         [HttpGet]
+        //get list of active internal flights based on Datetime given as a parameter
         public IList<Flight> GetFlightByDate(DateTime relative_to)
         {
             bool sync_all = Request.Query.ContainsKey("sync_all");
@@ -80,11 +91,13 @@ namespace FlightControlWeb.Controllers
 
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
-
+                //find all active internal flightplans with time bigger\equal to datetime given as a parameter
                 List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g => g.Initial_Location.Date_Time <= utcDate);
                 nonPlannedFlights.ForEach(flight =>
                 {
+                    //convert the flightplan's segment to list
                     var segments = flight.Segments.ToList();
+                    //sum the total time of the journey of the plane through the segments
                     int totalTimeSpan = segments.Sum(v => v.Timespan_seconds);
 
 
