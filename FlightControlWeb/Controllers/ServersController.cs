@@ -91,8 +91,8 @@ namespace FlightControlWeb.Controllers
         }
         private void importExternalFlights(string URL)
         {
-            string parsedURL = parseURL(URL);
-            string request_str = parsedURL + "/api/Flights?relative_to=";
+         //   string parsedURL = parseURL(URL);
+            string request_str = URL + "/api/Flights?relative_to=";
             DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
             string CurTime = parseTime(utcDate.ToString());
             request_str = request_str + CurTime;
@@ -189,7 +189,7 @@ namespace FlightControlWeb.Controllers
             return parsedTime;
         }
 
-        private string parseURL(string URL)
+    /*    private string parseURL(string URL)
         {
             string parsedURL = "";
             string[] words = URL.Split('/');
@@ -210,7 +210,7 @@ namespace FlightControlWeb.Controllers
                 }
             }
             return parsedURL;
-        }
+        } */
 
         private List<Flight> makeList(string json)
         {
