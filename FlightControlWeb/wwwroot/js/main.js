@@ -1,8 +1,12 @@
-﻿let active_flights = [];
+﻿/// <reference path="dropzone.js" />
+
+let active_flights = [];
 let allMarkers = [];
 let flightPath = null;
 let map = null;
+let selectedFlightID = null;
 (function () {
+   
     window.addEventListener('load', () => {
        map = initMap();
         flightPath = new google.maps.Polyline({
@@ -117,6 +121,8 @@ function initMap() {
     const map = new google.maps.Map(document.getElementById('map'), options);
     map.addListener('click', (e) => {
         $(".flights-details").empty();
+        selectedFlightID = null;
+        removeSelectedFlights();
         if (flightPath) {
             flightPath.setMap(null);
         }
@@ -136,7 +142,7 @@ function initMap() {
 
 //Add Marker Function
 function addFlight(flight, gmap) {
-    const iconImage = '../images/plane.png';
+    const iconImage = flight.flightID !== selectedFlightID ? '../images/plane.png' : '../images/yellowaircraft.png';
     const marker = new google.maps.Marker({
         position: new google.maps.LatLng(flight.latitude, flight.longitude),
         map:gmap,
@@ -146,6 +152,7 @@ function addFlight(flight, gmap) {
     })
     marker.addListener('click', async function () {
         //marker.icon = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
+        selectedFlightID = flight.flightID;
         showFlightDetailsByID(flight.flightID,gmap);
     });
     allMarkers.push(marker);
@@ -172,11 +179,11 @@ function paintFlightPath(flightPlan, gmap) {
 async function showFlightList(flightList) {
     let internalFlights = await getinternalFLights(flightList);
     if (internalFlights) {
-        showinternalFlightList(internalFlights);
+        showFlightListByClass(internalFlights,".myflight-list");
     }
     let externalFlights = await getexternalFLights(flightList);
     if (externalFlights) {
-        showexternalFlightList(externalFlights);
+        showFlightListByClass(externalFlights,".exflight-list");
     }
    //let internalFLights = await showinternalFlightList(flightList);
     //showexternalFlightList(flightList);
@@ -211,33 +218,21 @@ function getexternalFLights(flightlist) {
     return externalFlights;
 }
 //show external flights in my flights bar from the right of the page
-function showexternalFlightList(flightList) {
-    $(".exflight-list").empty();
+function showFlightListByClass(flightList,classFlightList) {
+    $(classFlightList).empty();
     const ul = document.createElement("ul");
-    ul.classList.add("exflights");
+   // ul.classList.add("exflights");
     flightList.forEach((flight) => {
         const li = document.createElement("li");
+        if (selectedFlightID === flight.flightID) {
+            li.classList.add('selected');
+        }
         let curflightID = flight.flightID;
         li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
         li.id = flight.flightID;
         ul.append(li);
     });
-    $(".exflight-list").append(ul);
-}
-//show internal flights in my flights bar from the right of the page
-function showinternalFlightList(flightList) {
-    $(".myflight-list").empty();
-    const ul = document.createElement("ul");
-    ul.classList.add("flights");
-    flightList.forEach((flight) => {
-        const li = document.createElement("li");
-        let curflightID = flight.flightID;
-        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
-        li.id = flight.flightID;
-        ul.append(li);
-    });
-    $(".myflight-list").append(ul);
-
+    $(classFlightList).append(ul);
 }
 //after X button is pressed , it will delete flight from DB and map
 async function deleteflightAfterPressingX(id) {
@@ -247,8 +242,14 @@ async function deleteflightAfterPressingX(id) {
         "method": "DELETE",
         "timeout": 0,
     };
+    try {
+        await $.ajax(settingss);
+    }
+    catch (err) {
+        console.log(err);
 
-    await $.ajax(settingss);
+    }
+  
 }
 //show flight details in flight details bar at the bottom of the page
 function showFlightDetails(flightplan) {
@@ -282,10 +283,16 @@ function showFlightDetails(flightplan) {
     companyName.innerHTML = `<b>${flightplan.company_Name}</b>`;
     passengers.innerHTML = flightplan.passengers;
     $(".flights-details").append(table);
+    removeSelectedFlights();
+    $(`#${flightplan.id}`).addClass("selected");
 }
-$(".myflight-list").on('click', (event) => {
+function removeSelectedFlights() {
+    $("ul li.selected").removeClass("selected");
+}
+$(".myflight-list, .exflight-list").on('click', (event) => {
     const flightID = event.target.id;
     if (flightID) {
+        selectedFlightID = flightID;
         showFlightDetailsByID(flightID,map);
     }
     

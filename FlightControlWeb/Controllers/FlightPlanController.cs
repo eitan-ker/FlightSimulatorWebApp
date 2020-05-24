@@ -55,7 +55,7 @@ namespace FlightControlWeb.Controllers
         [Route("flightplan")]
         [HttpPost("{flightplan}")]
         // post method with flightplan object from Postman, default is false because it comes from postman\file by client
-        public ActionResult AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
+        public ActionResult AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = true)
         {
             //loop through the collection given as a parameter
             foreach (var flightplan in flightplansparameter)

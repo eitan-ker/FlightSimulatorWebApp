@@ -15,6 +15,13 @@
     overflow: hidden;
     
 }
+ul li.selected {
+    color: #f3f32b;
+    font-weight: bold;
+}
+ul li {
+    cursor:pointer;
+}
 .flights-details {
     width: 100vh;
     background: green;
