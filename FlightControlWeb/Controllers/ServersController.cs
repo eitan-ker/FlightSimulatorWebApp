@@ -91,8 +91,11 @@ namespace FlightControlWeb.Controllers
         }
         private void importExternalFlights(string URL)
         {
-         //   string parsedURL = parseURL(URL);
+            string parsedURL = parseURL(URL);
+
             string request_str = URL + "/api/Flights?relative_to=";
+            //     string request_str = parsedURL + "/api/Flights?relative_to=";
+            
             DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
             string CurTime = parseTime(utcDate.ToString());
             request_str = request_str + CurTime;
@@ -113,8 +116,43 @@ namespace FlightControlWeb.Controllers
 
             // save in cache
             saveExternalFlights(external_flights);
-            //saveExternalFlightPlans(external_flights, parsedURL);
+      //      saveExternalFlightPlans(external_flights, parsedURL);
+      //      saveServerFlights(external_flights, parsedURL);
+        }
 
+        private void saveServerFlights(List<Flight> external_flights, string URL)
+        {
+            Dictionary<string, List<Flight>> serverFlight;
+            List<Flight> temp;
+            if (!_cache.TryGetValue("server_flights", out serverFlight))
+            {
+                // serverFlight.Add(URL, external_flights);
+                serverFlight = new Dictionary<string, List<Flight>>()
+                {
+                    { URL, external_flights }
+                };
+                _cache.Set("server_flights", serverFlight);
+            }
+            else
+            {
+                // check if i have the URL then overWrite - add otherwise
+                if (serverFlight.TryGetValue(URL, out temp))
+                {
+                    if (temp.Count != 0) // already have the server
+                    {
+                        temp.Clear();
+                        temp = external_flights;
+                    }
+                    else
+                    {
+                        temp = external_flights;
+                    }
+                }
+                else
+                {
+                    serverFlight.Add(URL, external_flights);
+                }
+            }
         }
 
         private void saveExternalFlightPlans(List<Flight> external_flights, string URL)
@@ -189,7 +227,7 @@ namespace FlightControlWeb.Controllers
             return parsedTime;
         }
 
-    /*    private string parseURL(string URL)
+        private string parseURL(string URL)
         {
             string parsedURL = "";
             string[] words = URL.Split('/');
@@ -210,7 +248,7 @@ namespace FlightControlWeb.Controllers
                 }
             }
             return parsedURL;
-        } */
+        } 
 
         private List<Flight> makeList(string json)
         {
@@ -255,6 +293,7 @@ namespace FlightControlWeb.Controllers
                 {
                     if (string.Compare(it.ServerId, ServerID) == 0)
                     {
+
                         servers.Remove(it);
                         return Ok();
                     }
