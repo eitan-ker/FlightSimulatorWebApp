@@ -104,8 +104,7 @@ async function getActiveFlightplan(id) {
         "method": "GET",
         "timeout": 0,
     };
-
-    return await $.ajax(settingss);
+        return await $.ajax(settingss); 
 }
 //initialize map 
 function initMap() {
@@ -246,8 +245,7 @@ async function deleteflightAfterPressingX(id) {
         await $.ajax(settingss);
     }
     catch (err) {
-        console.log(err);
-
+        toastr.error("error in deleting the flight from DB, server return error 404 which means that there is no flight with that flightID");
     }
   
 }
