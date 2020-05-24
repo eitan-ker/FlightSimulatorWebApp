@@ -4,11 +4,11 @@ namespace FlightControlWeb.Model
 {
     public class FlightManager : IFlightManager
     {
-        private static List<Flight> flights;
+        //private static List<Flight> flights;
 
         public void AddFlight(Flight temp)
         {
-            flights.Add(temp);
+            //flights.Add(temp);
         }
 
         public void deleteFlight(string id)
@@ -24,7 +24,7 @@ namespace FlightControlWeb.Model
 
         public IEnumerable<Flight> GetAllFlights()
         {
-            return flights;
+            return null;
         }
 
         public Flight GetFlightById(string id)
