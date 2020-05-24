@@ -59,7 +59,7 @@ namespace FlightControlWeb.Controllers
 
                     if (dif_sec >= element.Timespan_seconds)
                     {
-                        dif_sec = dif_sec - element.Timespan_seconds;
+                        dif_sec -= element.Timespan_seconds;
                     }
                     else
                     {
@@ -102,31 +102,30 @@ namespace FlightControlWeb.Controllers
 
                     if (flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
                     {
-                        Dictionary<string, Flight> allFlights;
-                        List<Flight> externalFlights;
 
                         if (!sync_all)
                         {
-                            if (_cache.TryGetValue("flights", out allFlights))
+                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
                             {
-                               // all flights are is_external false
+                                // all flights are is_external false
 
-                               /* if (!allFlights[flight.ID].Is_external) // local flights
-                                { */
+                                /* if (!allFlights[flight.ID].Is_external) // local flights
+                                 { */
                                 flightslist.Add(allFlights[flight.ID]);
                                 LinearInterpolation(flight, utcDate);
 
                                 // }
                             }
-                        } else
+                        }
+                        else
                         {
-                            if (_cache.TryGetValue("externalFlights", out externalFlights))
+                            if (_cache.TryGetValue("externalFlights", out List<Flight> externalFlights))
                             {
                                 foreach (Flight _flight in externalFlights)
                                 {
                                     flightslist.Add(_flight);
                                 }
-                              //  flightslist.Add(externalFlights[flight.ID]);
+                                //  flightslist.Add(externalFlights[flight.ID]);
                                 LinearInterpolation(flight, utcDate);
                             }
                         }

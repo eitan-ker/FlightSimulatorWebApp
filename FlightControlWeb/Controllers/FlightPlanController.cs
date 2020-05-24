@@ -73,8 +73,10 @@ namespace FlightControlWeb.Controllers
                 {
                     flightplan
                 };
-                    Dictionary<string, Flight> flightsdictionary = new Dictionary<string, Flight>();
-                    flightsdictionary.Add(curflight.FlightID, curflight);
+                    Dictionary<string, Flight> flightsdictionary = new Dictionary<string, Flight>
+                    {
+                        { curflight.FlightID, curflight }
+                    };
                     //add List in the name of flightplans and dictionary named flights to memcache
                     _cache.Set("flightplans", flightplans);
                     _cache.Set("flights", flightsdictionary);

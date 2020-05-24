@@ -224,7 +224,7 @@ namespace FlightControlWeb.Controllers
                     Flight external_flight = new Flight();
                     foreach (JProperty flight in elem.Children())
                     {
-                        external_flight.setFlight(flight.Name.ToString(), flight.First.ToString());
+                        external_flight.SetFlight(flight.Name.ToString(), flight.First.ToString());
                     }
                     all_flights.Add(external_flight);
                 }

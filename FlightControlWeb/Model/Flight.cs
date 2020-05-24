@@ -6,7 +6,7 @@ namespace FlightControlWeb
 {
     public class Flight
     {
-        public void setFlight(string name, string value)
+        public void SetFlight(string name, string value)
         {
             if (name.Equals("flightID")) 
             {
