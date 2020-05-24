@@ -54,7 +54,7 @@ namespace FlightControlWeb.Controllers
 
         [Route("flightplan")]
         [HttpPost("{flightplan}")]
-        // test post method with flightplan object from Postman
+        // post method with flightplan object from Postman, default is false because it comes from postman\file by client
         public ActionResult AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
         {
             //loop through the collection given as a parameter
@@ -84,7 +84,6 @@ namespace FlightControlWeb.Controllers
                 else
                 //flightsplans exists in memcache, therefore flights dictionary exist also so we can add flight to dictionary without hasitation
                 {
-
                     flightplans.Add(flightplan);
                     _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
                     flights.Add(curflight.FlightID, curflight);

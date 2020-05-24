@@ -15,6 +15,7 @@ let map = null;
     });
 })();
 
+//add marker on map and show flight details of the active flights
 async function init(map) {
     active_flights = await getActiveFlights();
     if (active_flights) {
@@ -29,6 +30,7 @@ async function init(map) {
     setTimeout(init, 1000, map);
     //console.log(active_flights);
 }
+//remove current markers on map before new flights get request comes active
 function removemarkertrails() {
     for (let i = 0; i < allMarkers.length; i = i + 1) {
         /*if (allMarkers[i].title == flight.company_name + '-' + flight.flightID) {
@@ -68,7 +70,7 @@ function formatDate(date) {
     return resultDate;
     // return [year, month, day,hours,minutes,seconds].join('-');
 }
-
+//get active flights from server
 async function getActiveFlights() {
     const currentDate = formatDate(new Date());
     
@@ -85,6 +87,7 @@ async function getActiveFlights() {
 
     return await $.ajax(settings);
 }
+//get active flightplan by id
 async function getActiveFlightplan(id) {
     
     //$.ajax(`https://localhost:44383/api/Flights?relative_to=${currentDate}`).done((data) => {
@@ -100,6 +103,7 @@ async function getActiveFlightplan(id) {
 
     return await $.ajax(settingss);
 }
+//initialize map 
 function initMap() {
     //Map options
     const options = {
@@ -141,17 +145,19 @@ function addFlight(flight, gmap) {
         //check for custom icon
     })
     marker.addListener('click', async function () {
-        // 1. you need to fetch the data from webapi of the flight plan
+        //marker.icon = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
         showFlightDetailsByID(flight.flightID,gmap);
     });
     allMarkers.push(marker);
 }
+//get flightplan details to show on bar from the right of the page and draw its course on map
 async function showFlightDetailsByID(flightId,gmap) {
     const curflightplan = await getActiveFlightplan(flightId);
     paintFlightPath(curflightplan, gmap);
     showFlightDetails(curflightplan)
     
 }
+//draw flightplan track on map
 function paintFlightPath(flightPlan, gmap) {
     const flightPlanCoordinates = [];
     flightPlanCoordinates.push({ lat: flightPlan.initial_Location.latitude, lng: flightPlan.initial_Location.longitude });
@@ -162,7 +168,7 @@ function paintFlightPath(flightPlan, gmap) {
     flightPath.setPath(flightPlanCoordinates);
     flightPath.setMap(gmap);
 }
-
+//prepare a list of active internal flights and external flights seperately from server
 async function showFlightList(flightList) {
     let internalFlights = await getinternalFLights(flightList);
     if (internalFlights) {
@@ -175,6 +181,7 @@ async function showFlightList(flightList) {
    //let internalFLights = await showinternalFlightList(flightList);
     //showexternalFlightList(flightList);
 }
+//get all active internal flights from server
 function getinternalFLights(flightlist) {
     let internalFlights = [];
     if (flightlist) {
@@ -191,6 +198,7 @@ function getinternalFLights(flightlist) {
     }*/
     return internalFlights;
 }
+//get all active external flights from server
 function getexternalFLights(flightlist) {
     let externalFlights = [];
     if (flightlist) {
@@ -202,6 +210,7 @@ function getexternalFLights(flightlist) {
     }
     return externalFlights;
 }
+//show external flights in my flights bar from the right of the page
 function showexternalFlightList(flightList) {
     $(".exflight-list").empty();
     const ul = document.createElement("ul");
@@ -215,6 +224,7 @@ function showexternalFlightList(flightList) {
     });
     $(".exflight-list").append(ul);
 }
+//show internal flights in my flights bar from the right of the page
 function showinternalFlightList(flightList) {
     $(".myflight-list").empty();
     const ul = document.createElement("ul");
@@ -229,6 +239,7 @@ function showinternalFlightList(flightList) {
     $(".myflight-list").append(ul);
 
 }
+//after X button is pressed , it will delete flight from DB and map
 async function deleteflightAfterPressingX(id) {
     let deleteurl = "https://localhost:44383/api/Flights/" + id;
     let settingss = {
@@ -239,6 +250,7 @@ async function deleteflightAfterPressingX(id) {
 
     await $.ajax(settingss);
 }
+//show flight details in flight details bar at the bottom of the page
 function showFlightDetails(flightplan) {
     $(".flights-details").empty();
     const table = document.createElement("table");

@@ -1,4 +1,5 @@
-﻿(function () {
+﻿//everything here is from youtube
+(function () {
     let dropzone = document.getElementById('dropzone');
 
     let upload = function (files) {
