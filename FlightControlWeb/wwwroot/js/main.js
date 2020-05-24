@@ -208,6 +208,7 @@ function showexternalFlightList(flightList) {
     ul.classList.add("exflights");
     flightList.forEach((flight) => {
         const li = document.createElement("li");
+        let curflightID = flight.flightID;
         li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
         li.id = flight.flightID;
         ul.append(li);
