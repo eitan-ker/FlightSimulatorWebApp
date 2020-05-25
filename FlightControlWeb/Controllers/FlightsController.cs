@@ -21,7 +21,7 @@ namespace FlightControlWeb.Controllers
         //DELETE: flights/{id}
         [Route("flights/{id}")]
         [HttpDelete("{id}")]
-        public IActionResult DeleteFlightByID(string id)
+        public async Task<IActionResult> DeleteFlightByID(string id)
         {
             //check if data structure name "flightplans" exist in memcache , create it
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
@@ -33,9 +33,9 @@ namespace FlightControlWeb.Controllers
                     //remove b
                     if (string.Compare(it.ID, id) == 0)
                     {
-                        flightplans.Remove(it);
+                        await Task.Run(() => flightplans.Remove(it));
                         _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
-                        flights.Remove(id);
+                        await Task.Run(() => flights.Remove(id));
                         return Ok();
                     }
                 }
@@ -44,10 +44,10 @@ namespace FlightControlWeb.Controllers
             return NotFound();
         }
         //linear interpolation function to calculate relative distance the plane flew to the destination of the current segment
-        private async void LinearInterpolation(FlightPlan flight, DateTime utcDate)
+        private void LinearInterpolation(FlightPlan flight, DateTime utcDate)
         {
             var segments = flight.Segments.ToList();
-            int totalTimeSpan = await Task.Run(() => segments.Sum(v => v.Timespan_seconds));
+            int totalTimeSpan = segments.Sum(v => v.Timespan_seconds);
             TimeSpan dif = utcDate.Subtract(flight.Initial_Location.Date_Time);
             int dif_sec = (int)dif.TotalSeconds;
             if (totalTimeSpan > dif_sec)
@@ -81,7 +81,7 @@ namespace FlightControlWeb.Controllers
         [Route("flights")]
         [HttpGet]
         //get list of active internal flights based on Datetime given as a parameter
-        public IList<Flight> GetFlightByDate(DateTime relative_to)
+        public async Task<IList<Flight>> GetFlightByDate(DateTime relative_to)
         {
             bool sync_all = Request.Query.ContainsKey("sync_all");
             List<Flight> flightslist = new List<Flight>();
@@ -91,8 +91,9 @@ namespace FlightControlWeb.Controllers
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
                 //find all active internal flightplans with time bigger\equal to datetime given as a parameter
-                List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g => g.Initial_Location.Date_Time <= utcDate);
-                nonPlannedFlights.ForEach(flight =>
+                List<FlightPlan> nonPlannedFlights = await Task.Run(() => flightplans.FindAll(g => 
+                g.Initial_Location.Date_Time <= utcDate));
+                nonPlannedFlights.ForEach(async flight =>
                 {
                     //convert the flightplan's segment to list
                     var segments = flight.Segments.ToList();
@@ -112,7 +113,7 @@ namespace FlightControlWeb.Controllers
                                 /* if (!allFlights[flight.ID].Is_external) // local flights
                                  { */
                                 flightslist.Add(allFlights[flight.ID]);
-                                LinearInterpolation(flight, utcDate);
+                                await Task.Run(() => LinearInterpolation(flight, utcDate));
 
                                 // }
                             }
@@ -126,7 +127,7 @@ namespace FlightControlWeb.Controllers
                                     flightslist.Add(_flight);
                                 }
                                 //  flightslist.Add(externalFlights[flight.ID]);
-                                LinearInterpolation(flight, utcDate);
+                                await Task.Run(() => LinearInterpolation(flight, utcDate));
                             }
                         }
                     }

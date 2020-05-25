@@ -10,6 +10,8 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading.Tasks;
+
 
 namespace FlightControlWeb.Controllers
 {
@@ -42,7 +44,7 @@ namespace FlightControlWeb.Controllers
         // POST: /api/servers
         [Route("servers")]
         [HttpPost("{Server}")]
-        public IActionResult AddNewExternalServerToList(Server server)
+        public async Task<IActionResult> AddNewExternalServerToList(Server server)
         {
             List<Server> servers;
             try
@@ -58,7 +60,7 @@ namespace FlightControlWeb.Controllers
                     //create the "servers" list in memcache
                     _cache.Set("servers", servers);
                     //add flight and respective flightplan from the external server to the memcache DB
-                    importExternalFlights(server.ServerUrl.ToString(), server.ServerId);
+                    await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
                 }
                 else
                 {
@@ -68,7 +70,7 @@ namespace FlightControlWeb.Controllers
                         //add the server to "servers" list in memcache
                         servers.Add(server);
                         //add the flight from the server
-                        importExternalFlights(server.ServerUrl.ToString(), server.ServerId);
+                        await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
                     }
                     else
                     {
@@ -233,14 +235,17 @@ namespace FlightControlWeb.Controllers
                 List<Flight> all_flights = new List<Flight>();
                 JArray json_convert = JsonConvert.DeserializeObject<JArray>(json);
                 // throws exception when server has no flights - stops program
-                foreach (var elem in json_convert.Children())
+                if (json_convert != null) // if not empty
                 {
-                    Flight external_flight = new Flight();
-                    foreach (JProperty flight in elem.Children())
+                    foreach (var elem in json_convert.Children())
                     {
-                        external_flight.SetFlight(flight.Name.ToString(), flight.First.ToString());
+                        Flight external_flight = new Flight();
+                        foreach (JProperty flight in elem.Children())
+                        {
+                            external_flight.SetFlight(flight.Name.ToString(), flight.First.ToString());
+                        }
+                        all_flights.Add(external_flight);
                     }
-                    all_flights.Add(external_flight);
                 }
                 return all_flights;
             } 
@@ -255,7 +260,7 @@ namespace FlightControlWeb.Controllers
         [Route("servers/{ServerID}")]
         [HttpDelete("{ServerID}")]
         // test post method with flightplan object from Postman
-        public IActionResult DeleteExternalServerFromListByID(string ServerID)
+        public async Task<IActionResult> DeleteExternalServerFromListByID(string ServerID)
         {
             if (!_cache.TryGetValue("servers", out List<Server> servers))
             {
@@ -269,7 +274,7 @@ namespace FlightControlWeb.Controllers
                 {
                     if (string.Compare(it.ServerId, ServerID) == 0)
                     {
-                        deleteFlightsFromServer(ServerID);
+                        await Task.Run(() => deleteFlightsFromServer(ServerID));
                         servers.Remove(it);
                         return Ok();
                     }
