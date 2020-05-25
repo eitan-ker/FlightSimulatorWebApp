@@ -117,9 +117,13 @@ namespace FlightControlWeb.Controllers
                 }
 
                 // save in cache
-                saveExternalFlights(external_flights);
-                saveExternalFlightPlans(external_flights, URL);
-                saveServerFlights(external_flights, id);
+                if (external_flights != null)
+                {
+                    saveExternalFlights(external_flights);
+                    saveExternalFlightPlans(external_flights, URL);
+                    saveServerFlights(external_flights, id);
+                }
+                
             }
             catch
             {
