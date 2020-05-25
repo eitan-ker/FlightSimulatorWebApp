@@ -106,6 +106,7 @@ namespace FlightControlWeb.Controllers
 
                         if (!sync_all)
                         {
+                            //add internal flights
                             if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
                             {
                                 // all flights are is_external false
@@ -120,6 +121,19 @@ namespace FlightControlWeb.Controllers
                         }
                         else
                         {
+                            //add internal flights
+                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
+                            {
+                                // all flights are is_external false
+
+                                /* if (!allFlights[flight.ID].Is_external) // local flights
+                                 { */
+                                flightslist.Add(allFlights[flight.ID]);
+                                await Task.Run(() => LinearInterpolation(flight, utcDate));
+
+                                // }
+                            }
+                            //add external flights
                             if (_cache.TryGetValue("externalFlights", out List<Flight> externalFlights))
                             {
                                 foreach (Flight _flight in externalFlights)
