@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
+using System.Text;
 using System.Threading.Tasks;
 
 
@@ -99,7 +100,7 @@ namespace FlightControlWeb.Controllers
                 string request_str = URL + "/api/Flights?relative_to=";
 
                 DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
-                string CurTime = parseTime(utcDate.ToString());
+                string CurTime = parseTime(utcDate);
                 request_str = request_str + CurTime;
 
                 WebRequest request = WebRequest.Create(request_str);
@@ -217,12 +218,27 @@ namespace FlightControlWeb.Controllers
             }
         }
 
-        private string parseTime(string time)
+        private string parseTime(DateTime time)
         {
-            string[] words = time.Split(' ');
-            int count = 0;
-            string parsedTime = "";
-            foreach (var word in words)
+            //string[] words = time.Split(' ');
+            //int count = 0;
+            StringBuilder parsedTime = new StringBuilder(50);
+            int month = time.Month;
+            int day = time.Day;
+            int year = time.Year;
+            int hours =time.Hour;
+            int minutes =time.Minute;
+            int seconds =time.Second;
+            string _month = ParseTString(month);
+            string _day = ParseTString(day);
+            string _year = ParseTString(year);
+            string _hour = ParseTString(hours);
+            string _minutes = ParseTString(minutes);
+            string _seconds = ParseTString(seconds);
+            parsedTime.Append(_year).Append("-").Append(_month).Append("-").Append(_day).Append("T").Append(_hour).Append(":").Append(_minutes).Append(":").Append(_seconds).Append("Z");
+            string final_parsedtime = parsedTime.ToString();
+            
+            /*foreach (var word in words)
             {
                 if (count == 0)
                 {
@@ -235,8 +251,13 @@ namespace FlightControlWeb.Controllers
                     break;
                 }
                 count++;
-            }
-            return parsedTime;
+            }*/
+            return final_parsedtime;
+        }
+
+        private string ParseTString(int val)
+        {
+            return (val < 10) ? "0" + val : val.ToString();
         }
 
         private List<Flight> makeList(string json)
