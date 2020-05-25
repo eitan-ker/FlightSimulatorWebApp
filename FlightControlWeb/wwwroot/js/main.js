@@ -81,7 +81,8 @@ async function getActiveFlights() {
        //console.log(data);
     //})
     //should be: 2020-05-13T17:54:30
-    let url = "https://localhost:44383/api/Flights?relative_to=" + currentDate+"&syncall";
+    let sync_all = true;
+    let url = "https://localhost:44383/api/Flights?relative_to=" + currentDate +"&"+sync_all;
     let settings = {
         "url": url,
         "method": "GET",
