@@ -94,31 +94,38 @@ namespace FlightControlWeb.Controllers
         private void importExternalFlights(string URL, string id)
         {
         //    string parsedURL = parseURL(URL);
-
-            string request_str = URL + "/api/Flights?relative_to=";
-            
-            DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
-            string CurTime = parseTime(utcDate.ToString());
-            request_str = request_str + CurTime;
-
-            WebRequest request = WebRequest.Create(request_str);
-            request.Method = "GET";
-            HttpWebResponse response = null;
-            response = (HttpWebResponse)request.GetResponse();
-            string strResult = "";
-            List<Flight> external_flights;
-            using (Stream stream = response.GetResponseStream())
+        try
             {
-                StreamReader sr = new StreamReader(stream);
-                strResult = sr.ReadToEnd();
-                external_flights = makeList(strResult);
-                sr.Close();
-            }
+                string request_str = URL + "/api/Flights?relative_to=";
 
-            // save in cache
-            saveExternalFlights(external_flights);
-            saveExternalFlightPlans(external_flights, URL);
-            saveServerFlights(external_flights, id);
+                DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
+                string CurTime = parseTime(utcDate.ToString());
+                request_str = request_str + CurTime;
+
+                WebRequest request = WebRequest.Create(request_str);
+                request.Method = "GET";
+                HttpWebResponse response = null;
+                response = (HttpWebResponse)request.GetResponse();
+                string strResult = "";
+                List<Flight> external_flights;
+                using (Stream stream = response.GetResponseStream())
+                {
+                    StreamReader sr = new StreamReader(stream);
+                    strResult = sr.ReadToEnd();
+                    external_flights = makeList(strResult);
+                    sr.Close();
+                }
+
+                // save in cache
+                saveExternalFlights(external_flights);
+                saveExternalFlightPlans(external_flights, URL);
+                saveServerFlights(external_flights, id);
+            }
+            catch
+            {
+
+            }
+            
         }
 
         private void saveServerFlights(List<Flight> external_flights, string id)

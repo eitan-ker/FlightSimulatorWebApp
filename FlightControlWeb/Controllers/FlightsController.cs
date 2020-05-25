@@ -121,6 +121,7 @@ namespace FlightControlWeb.Controllers
                         }
                         else
                         {
+
                             //add internal flights
                             if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
                             {
