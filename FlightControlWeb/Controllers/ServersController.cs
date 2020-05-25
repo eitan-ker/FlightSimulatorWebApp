@@ -181,7 +181,7 @@ namespace FlightControlWeb.Controllers
             {
                 flightPlans = new List<FlightPlan>();
                 flightPlans.Add(flightPlan);
-                _cache.Set("externalFlights", flightPlans);
+                _cache.Set("externalFlightPlans", flightPlans);
             } else
             {
                 flightPlans.Add(flightPlan);
@@ -288,15 +288,6 @@ namespace FlightControlWeb.Controllers
             {
                 if (serverFlightsDic.TryGetValue(id, out serverFlights))
                 {
-                    /*if (_cache.TryGetValue("flights", out flights))
-                    {
-                        Dictionary<string, Flight> temp = new Dictionary<string, Flight>(flights);
-                        foreach (Flight server_flight in serverFlights)
-                        {
-                            temp.Remove(server_flight.FlightID);
-                        }
-                        flights = temp;
-                    }*/
                     if (_cache.TryGetValue("externalFlights", out externalFlights))
                     {
                         List<FlightPlan> temp = new List<FlightPlan>(externalFlights);
