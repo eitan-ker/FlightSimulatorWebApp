@@ -30,7 +30,7 @@ async function init(map) {
         });
         showFlightList(active_flights);
     }
-    
+    //recursive call for init every 1 sec
     setTimeout(init, 1000, map);
     //console.log(active_flights);
 }
@@ -41,7 +41,6 @@ function removemarkertrails() {
             allMarkers[i].setMap(null);
         }*/
         allMarkers[i].setMap(null);
-
     }
 }
 
@@ -82,7 +81,7 @@ async function getActiveFlights() {
        //console.log(data);
     //})
     //should be: 2020-05-13T17:54:30
-    let url = "https://localhost:44383/api/Flights?relative_to=" + currentDate;
+    let url = "https://localhost:44383/api/Flights?relative_to=" + currentDate+"&syncall";
     let settings = {
         "url": url,
         "method": "GET",
