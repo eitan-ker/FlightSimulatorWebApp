@@ -165,10 +165,12 @@ async function showFlightDetailsByID(flightId,gmap) {
 //draw flightplan track on map
 function paintFlightPath(flightPlan, gmap) {
     const flightPlanCoordinates = [];
-    flightPlanCoordinates.push({ lat: flightPlan.initial_Location.latitude, lng: flightPlan.initial_Location.longitude });
-    flightPlan.segments.forEach((segment) => {
-        flightPlanCoordinates.push({ lat: segment.latitude, lng: segment.longitude });
-    });
+    if (flightPlan) {
+        flightPlanCoordinates.push({ lat: flightPlan.initial_Location.latitude, lng: flightPlan.initial_Location.longitude });
+        flightPlan.segments.forEach((segment) => {
+            flightPlanCoordinates.push({ lat: segment.latitude, lng: segment.longitude });
+        });
+    }
     flightPath.setMap(null);
     flightPath.setPath(flightPlanCoordinates);
     flightPath.setMap(gmap);
@@ -242,6 +244,10 @@ async function deleteflightAfterPressingX(id) {
     };
     try {
         await $.ajax(settingss);
+        if (id === selectedFlightID) {
+            $(".flights-details").empty();
+            paintFlightPath(null, map);
+        }
     }
     catch (err) {
         toastr.error("error in deleting the flight from DB, server return error 404 which means that there is no flight with that flightID");
