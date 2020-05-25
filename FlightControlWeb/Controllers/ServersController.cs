@@ -286,7 +286,7 @@ namespace FlightControlWeb.Controllers
         {
             List<Flight> serverFlights;
             Dictionary<string, List<Flight>> serverFlightsDic;   // dictionary
-            Dictionary<string, Flight> flights;
+            //Dictionary<string, Flight> flights;
             List<FlightPlan> flightPlans;
             List<FlightPlan> externalFlights;
             if (_cache.TryGetValue("server_flights", out serverFlightsDic))
