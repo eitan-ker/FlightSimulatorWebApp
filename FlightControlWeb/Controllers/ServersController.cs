@@ -45,7 +45,7 @@ namespace FlightControlWeb.Controllers
         // POST: /api/servers
         [Route("servers")]
         [HttpPost("{Server}")]
-        public async Task<IActionResult> AddNewExternalServerToList(Server server)
+        public IActionResult AddNewExternalServerToList(Server server)
         {
             List<Server> servers;
             try
@@ -61,7 +61,7 @@ namespace FlightControlWeb.Controllers
                     //create the "servers" list in memcache
                     _cache.Set("servers", servers);
                     //add flight and respective flightplan from the external server to the memcache DB
-                    await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
+                 //   await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace FlightControlWeb.Controllers
                         //add the server to "servers" list in memcache
                         servers.Add(server);
                         //add the flight from the server
-                        await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
+                   //     await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
                     }
                     else
                     {
@@ -292,7 +292,7 @@ namespace FlightControlWeb.Controllers
         [Route("servers/{ServerID}")]
         [HttpDelete("{ServerID}")]
         // test post method with flightplan object from Postman
-        public async Task<IActionResult> DeleteExternalServerFromListByID(string ServerID)
+        public IActionResult DeleteExternalServerFromListByID(string ServerID)
         {
             if (!_cache.TryGetValue("servers", out List<Server> servers))
             {
@@ -306,7 +306,7 @@ namespace FlightControlWeb.Controllers
                 {
                     if (string.Compare(it.ServerId, ServerID) == 0)
                     {
-                        await Task.Run(() => deleteFlightsFromServer(ServerID));
+                        deleteFlightsFromServer(ServerID);
                         servers.Remove(it);
                         return Ok();
                     }

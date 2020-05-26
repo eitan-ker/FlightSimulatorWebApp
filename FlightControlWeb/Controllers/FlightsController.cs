@@ -6,6 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FlightControlWeb.Model;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace FlightControlWeb.Controllers
 {
@@ -21,11 +35,13 @@ namespace FlightControlWeb.Controllers
         //DELETE: flights/{id}
         [Route("flights/{id}")]
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFlightByID(string id)
+        public IActionResult DeleteFlightByID(string id)
         {
+
             //check if data structure name "flightplans" exist in memcache , create it
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
+                List<FlightPlan> tempPlan = new List<FlightPlan>(flightplans);
                 /*loop throgh flight plans in datasctruture and find the requested flightplan, if it exist then delete it from the flightplans 
                  * data structure, remove both flightplan and respective flight*/
                 foreach (var it in flightplans)
@@ -33,12 +49,13 @@ namespace FlightControlWeb.Controllers
                     //remove b
                     if (string.Compare(it.ID, id) == 0)
                     {
-                        await Task.Run(() => flightplans.Remove(it));
+                        tempPlan.Remove(it);
                         _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
-                        await Task.Run(() => flights.Remove(id));
+                        flights.Remove(id);
                         return Ok();
                     }
                 }
+                flightplans = tempPlan;
             }
             //there isnt a datastructure name "flightplans" in memcache
             return NotFound();
@@ -65,10 +82,13 @@ namespace FlightControlWeb.Controllers
                     {
                         double relative = (double)dif_sec / (double)element.Timespan_seconds;
                         var flights = (IDictionary<string, Flight>)_cache.Get("flights");
-                        if (flights.ContainsKey(flight.ID))
+                        if (flights != null)
                         {
-                            flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                            flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                            if (flights.ContainsKey(flight.ID))
+                            {
+                                flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                                flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                            }
                         }
                         break;
                     }
@@ -81,19 +101,20 @@ namespace FlightControlWeb.Controllers
         [Route("flights")]
         [HttpGet]
         //get list of active internal flights based on Datetime given as a parameter
-        public async Task<IList<Flight>> GetFlightByDate(DateTime relative_to)
+        public IList<Flight> GetFlightByDate(DateTime relative_to)
         {
             bool sync_all = Request.Query.ContainsKey("sync_all");
             List<Flight> flightslist = new List<Flight>();
             DateTime utcDate = relative_to.ToUniversalTime();
 
-
+           ImportExternalFlights();
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
             {
+                
                 //find all active internal flightplans with time bigger\equal to datetime given as a parameter
-                List<FlightPlan> nonPlannedFlights = await Task.Run(() => flightplans.FindAll(g => 
-                g.Initial_Location.Date_Time <= utcDate));
-                nonPlannedFlights.ForEach(async flight =>
+                List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g => 
+                g.Initial_Location.Date_Time <= utcDate);
+                nonPlannedFlights.ForEach(flight =>
                 {
                     //convert the flightplan's segment to list
                     var segments = flight.Segments.ToList();
@@ -103,7 +124,7 @@ namespace FlightControlWeb.Controllers
 
                     if (flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
                     {
-
+                        
                         if (!sync_all)
                         {
                             //add internal flights
@@ -114,7 +135,7 @@ namespace FlightControlWeb.Controllers
                                 /* if (!allFlights[flight.ID].Is_external) // local flights
                                  { */
                                 flightslist.Add(allFlights[flight.ID]);
-                                await Task.Run(() => LinearInterpolation(flight, utcDate));
+                                LinearInterpolation(flight, utcDate);
 
                                 // }
                             }
@@ -130,7 +151,7 @@ namespace FlightControlWeb.Controllers
                                 /* if (!allFlights[flight.ID].Is_external) // local flights
                                  { */
                                 flightslist.Add(allFlights[flight.ID]);
-                                await Task.Run(() => LinearInterpolation(flight, utcDate));
+                                LinearInterpolation(flight, utcDate);
 
                                 // }
                             }
@@ -139,18 +160,273 @@ namespace FlightControlWeb.Controllers
                             {
                                 foreach (Flight _flight in externalFlights)
                                 {
-                                    flightslist.Add(_flight);
+                                    if (_flight.FlightID.CompareTo(flight.ID) == 0)
+                                    {
+                                        flightslist.Add(_flight);
+                                    }
                                 }
                                 //  flightslist.Add(externalFlights[flight.ID]);
-                                await Task.Run(() => LinearInterpolation(flight, utcDate));
+                                LinearInterpolation(flight, utcDate);
                             }
                         }
                     }
+
                 });
 
                 return flightslist;
             }
             return null;
         }
+        private void ImportExternalFlights()
+        {
+            _cache.TryGetValue("servers", out List<Server> allServers);
+            if (allServers != null)
+            {
+                foreach (Server server in allServers)
+                {
+                    try
+                    {
+                        string request_str = server.ServerUrl + "/api/Flights?relative_to=";
+                        DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
+                        string CurTime = ParseTime(utcDate);
+                        request_str = request_str + CurTime + "&sync_all";
+                        WebRequest request = WebRequest.Create(request_str);
+                        request.Method = "GET";
+                        HttpWebResponse response = null;
+                        response = (HttpWebResponse)request.GetResponse();
+                        string strResult = "";
+                        List<Flight> external_flights;
+                        using (Stream stream = response.GetResponseStream())
+                        {
+                            StreamReader sr = new StreamReader(stream);
+                            strResult = sr.ReadToEnd();
+                            external_flights = MakeList(strResult);
+                            sr.Close();
+                        }
+
+                        // save in cache
+                        if (external_flights != null)
+                        {
+                            SaveExternalFlights(external_flights);
+                            FindExternalFlightPlans(external_flights, server.ServerUrl);
+                            SaveServerFlights(external_flights, server.ServerId);
+                        }
+
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+        }
+        private void SaveServerFlights(List<Flight> external_flights, string ServerId)
+        {
+            List<Flight> tempFlights = new List<Flight>(external_flights);
+            Dictionary<string, List<Flight>> serverFlight;
+            List<Flight> temp;
+            if (!_cache.TryGetValue("server_flights", out serverFlight))
+            {
+                // serverFlight.Add(URL, external_flights);
+                serverFlight = new Dictionary<string, List<Flight>>()
+                {
+                    { ServerId, tempFlights }
+                };
+                _cache.Set("server_flights", serverFlight);
+            }
+            else
+            {
+                // check if i have the URL then overWrite - add otherwise
+                if (serverFlight.TryGetValue(ServerId, out temp))
+                {
+                    if (temp.Count != 0) // already have the server
+                    {
+                        temp.Clear();
+                        temp = tempFlights;
+                    }
+                    else
+                    {
+                        temp = tempFlights;
+                    }
+                }
+                else
+                {
+                    serverFlight.Add(ServerId, tempFlights);
+                }
+            }
+        }
+        private void FindExternalFlightPlans(List<Flight> external_flights, string URL)
+        {
+            string request_str = URL + "/api/FlightPlan/";
+            foreach (Flight flight in external_flights)
+            {
+                request_str = request_str + flight.FlightID;
+                WebRequest request = WebRequest.Create(request_str);
+                request.Method = "GET";
+                HttpWebResponse response = null;
+                response = (HttpWebResponse)request.GetResponse();
+                string strResult = "";
+                using (Stream stream = response.GetResponseStream())
+                {
+                    StreamReader sr = new StreamReader(stream);
+                    strResult = sr.ReadToEnd();
+                    SaveExternalFlightPlans(strResult, flight.FlightID); // if flight plan doesn;t have the id
+                    sr.Close();
+                }
+            }
+        }
+        private void SaveExternalFlightPlans(string flightPlanStr, string id)
+        {
+            List<FlightPlan> flightPlans;
+            FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
+            if (flightPlan.Company_Name != null)
+            {
+                flightPlan.ID = id;
+                if (!_cache.TryGetValue("flightplans", out flightPlans))
+                {
+                    flightPlans = new List<FlightPlan>();
+                    flightPlans.Add(flightPlan);
+                    _cache.Set("flightplans", flightPlans);
+                }
+                else
+                {
+                    int count = 0;
+                    foreach (FlightPlan plan in flightPlans) // if new flight id is different from all flights
+                    {
+                        if (flightPlan.ID.CompareTo(plan.ID) != 0)
+                        {
+                            count++;
+                        }
+                    }
+                    if (count == flightPlans.Count)
+                    {
+                        flightPlans.Add(flightPlan);
+
+                    }
+                }
+            }
+            
+        }
+        private void SaveExternalFlights(List<Flight> flights)
+        {
+            List<Flight> external_flights;
+            if (!_cache.TryGetValue("externalFlights", out external_flights))
+            {
+                external_flights = flights;
+                _cache.Set("externalFlights", flights);
+            }
+            else
+            {
+                if (external_flights.Count == 0)
+                {
+                    foreach (Flight flight in flights)
+                    {
+                        external_flights.Add(flight);
+                    }
+
+                } else
+                {
+                    foreach (Flight flight in flights)
+                    {
+                        int count = 0;
+                        foreach (Flight ext_flight in external_flights) // if new flight id is different from all flights
+                        {
+                            if (ext_flight.FlightID.CompareTo(flight.FlightID) != 0)
+                            {
+                                count++;
+                            }
+                        }
+                        if (count == external_flights.Count)
+                        {
+                            external_flights.Add(flight);
+                        }
+                    }
+                }
+                
+            }
+        }
+        private string ParseTime(DateTime time)
+        {
+            //string[] words = time.Split(' ');
+            //int count = 0;
+            StringBuilder parsedTime = new StringBuilder(50);
+            int month = time.Month;
+            int day = time.Day;
+            int year = time.Year;
+            int hours = time.Hour;
+            int minutes = time.Minute;
+            int seconds = time.Second;
+            string _month = ParseTString(month);
+            string _day = ParseTString(day);
+            string _year = ParseTString(year);
+            string _hour = ParseTString(hours);
+            string _minutes = ParseTString(minutes);
+            string _seconds = ParseTString(seconds);
+            parsedTime.Append(_year).Append("-").Append(_month).Append("-").Append(_day).Append("T").Append(_hour).Append(":").Append(_minutes).Append(":").Append(_seconds).Append("Z");
+            string final_parsedtime = parsedTime.ToString();
+
+            return final_parsedtime;
+        }
+        private string ParseTString(int val)
+        {
+            return (val < 10) ? "0" + val : val.ToString();
+        }
+        private List<Flight> MakeList(string json)
+        {
+            try
+            {
+                List<Flight> all_flights = new List<Flight>();
+                JArray json_convert = JsonConvert.DeserializeObject<JArray>(json);
+                // throws exception when server has no flights - stops program
+                if (json_convert != null) // if not empty
+                {
+                    foreach (var elem in json_convert.Children())
+                    {
+                        Flight external_flight = new Flight();
+                        foreach (JProperty flight in elem.Children())
+                        {
+                            external_flight.SetFlight(flight.Name.ToString(), flight.First.ToString());
+                        }
+                        all_flights.Add(external_flight);
+                    }
+                }
+                return all_flights;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
+        }
+        public void DeleteExternalFlight(string id)
+        {
+            //check if data structure name "flightplans" exist in memcache , create it
+            if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
+            {
+                List<FlightPlan> tempPlan = new List<FlightPlan>(flightplans);
+                /*loop throgh flight plans in datasctruture and find the requested flightplan, if it exist then delete it from the flightplans 
+                 * data structure, remove both flightplan and respective flight*/
+                foreach (var it in flightplans)
+                {
+                    //remove b
+                    if (string.Compare(it.ID, id) == 0)
+                    {
+                        tempPlan.Remove(it);
+                        _cache.TryGetValue("externalFlights", out List<Flight> flights);
+                        List<Flight> temp = new List<Flight>(flights);
+                        foreach (Flight _flight in flights)
+                        {
+                            if (_flight.FlightID.CompareTo(id) == 0)
+                            {
+                                temp.Remove(_flight);
+                            }
+                        }
+                        flights = temp;
+                    }
+                }
+                flightplans = tempPlan;
+            }
+        }
+
     }
 }

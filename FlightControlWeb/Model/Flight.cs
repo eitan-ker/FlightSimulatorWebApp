@@ -8,7 +8,7 @@ namespace FlightControlWeb
     {
         public void SetFlight(string name, string value)
         {
-            if (name.Equals("flightID")) 
+            if (name.Equals("flight_id")) 
             {
                 this.FlightID = value;
             }
