@@ -21,14 +21,22 @@ let selectedFlightID = null;
 
 //add marker on map and show flight details of the active flights
 async function init(map) {
+    let check_if_selected_flight_is_still_active = false;
     active_flights = await getActiveFlights();
     if (active_flights) {
         removemarkertrails();
         active_flights.forEach((flight) => {
-
+            if (selectedFlightID != null && selectedFlightID == flight.flightID && check_if_selected_flight_is_still_active == false) {
+                check_if_selected_flight_is_still_active = true;
+            }
             addFlight(flight, map);
         });
         showFlightList(active_flights);
+        //check if marked flight is no longer active, if so then delete its path on map and its flight details
+        if (check_if_selected_flight_is_still_active == false) {
+            paintFlightPath(null, map);
+            $(".flights-details").empty();
+        }
     }
     //recursive call for init every 1 sec
     setTimeout(init, 1000, map);
