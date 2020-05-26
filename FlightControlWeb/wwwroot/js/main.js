@@ -26,6 +26,7 @@ async function init(map) {
     if (active_flights) {
         removemarkertrails();
         active_flights.forEach((flight) => {
+            //check if selectedflight is still active, if not then the boolean will turn to true
             if (selectedFlightID != null && selectedFlightID == flight.flightID && check_if_selected_flight_is_still_active == false) {
                 check_if_selected_flight_is_still_active = true;
             }
