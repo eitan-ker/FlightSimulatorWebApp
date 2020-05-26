@@ -45,7 +45,7 @@ namespace FlightControlWeb.Controllers
         // POST: /api/servers
         [Route("servers")]
         [HttpPost("{Server}")]
-        public IActionResult AddNewExternalServerToList(Server server)
+        public async Task<IActionResult> AddNewExternalServerToList(Server server)
         {
             List<Server> servers;
             try
@@ -59,7 +59,7 @@ namespace FlightControlWeb.Controllers
                         server
                 };
                     //create the "servers" list in memcache
-                    _cache.Set("servers", servers);
+                    await Task.Run(() => _cache.Set("servers", servers));
                     //add flight and respective flightplan from the external server to the memcache DB
                  //   await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
                 }
@@ -69,7 +69,7 @@ namespace FlightControlWeb.Controllers
                     if (servers.Find(o => o.ServerId == server.ServerId) == null)
                     {
                         //add the server to "servers" list in memcache
-                        servers.Add(server);
+                        await Task.Run(() => servers.Add(server));
                         //add the flight from the server
                    //     await Task.Run(() => importExternalFlights(server.ServerUrl.ToString(), server.ServerId));
                     }
@@ -92,207 +92,11 @@ namespace FlightControlWeb.Controllers
                 return BadRequest();
             }
         }
-        private void importExternalFlights(string URL, string id)
-        {
-        //    string parsedURL = parseURL(URL);
-        try
-            {
-                string request_str = URL + "/api/Flights?relative_to=";
-
-                DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
-                string CurTime = parseTime(utcDate);
-                request_str = request_str + CurTime;
-
-                WebRequest request = WebRequest.Create(request_str);
-                request.Method = "GET";
-                HttpWebResponse response = null;
-                response = (HttpWebResponse)request.GetResponse();
-                string strResult = "";
-                List<Flight> external_flights;
-                using (Stream stream = response.GetResponseStream())
-                {
-                    StreamReader sr = new StreamReader(stream);
-                    strResult = sr.ReadToEnd();
-                    external_flights = makeList(strResult);
-                    sr.Close();
-                }
-
-                // save in cache
-                if (external_flights != null)
-                {
-                    saveExternalFlights(external_flights);
-                    saveExternalFlightPlans(external_flights, URL);
-                    saveServerFlights(external_flights, id);
-                }
-                
-            }
-            catch
-            {
-
-            }
-            
-        }
-
-        private void saveServerFlights(List<Flight> external_flights, string id)
-        {
-            Dictionary<string, List<Flight>> serverFlight;
-            List<Flight> temp;
-            if (!_cache.TryGetValue("server_flights", out serverFlight))
-            {
-                // serverFlight.Add(URL, external_flights);
-                serverFlight = new Dictionary<string, List<Flight>>()
-                {
-                    { id, external_flights }
-                };
-                _cache.Set("server_flights", serverFlight);
-            }
-            else
-            {
-                // check if i have the URL then overWrite - add otherwise
-                if (serverFlight.TryGetValue(id, out temp))
-                {
-                    if (temp.Count != 0) // already have the server
-                    {
-                        temp.Clear();
-                        temp = external_flights;
-                    }
-                    else
-                    {
-                        temp = external_flights;
-                    }
-                }
-                else
-                {
-                    serverFlight.Add(id, external_flights);
-                }
-            }
-        }
-
-        private void saveExternalFlightPlans(List<Flight> external_flights, string URL)
-        {
-            string request_str = URL + "/api/FlightPlan/";
-            foreach (Flight flight in external_flights)
-            {
-                WebRequest request = WebRequest.Create(request_str + flight.FlightID);
-                request.Method = "GET";
-                HttpWebResponse response = null;
-                response = (HttpWebResponse)request.GetResponse();
-                string strResult = "";
-                using (Stream stream = response.GetResponseStream())
-                {
-                    StreamReader sr = new StreamReader(stream);
-                    strResult = sr.ReadToEnd();
-                    saveExternalFlightPlans(strResult);
-                    sr.Close();
-                }
-            }
-        }
-        private void saveExternalFlightPlans(string flightPlanStr)
-        {
-            List<FlightPlan> flightPlans;
-            FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
-            if (!_cache.TryGetValue("flightPlan", out flightPlans))
-            {
-                flightPlans = new List<FlightPlan>();
-                flightPlans.Add(flightPlan);
-                _cache.Set("externalFlightPlans", flightPlans);
-            } else
-            {
-                flightPlans.Add(flightPlan);
-            }
-        }
-        private void saveExternalFlights(List<Flight> flights)
-        {
-            List<Flight> external_flights;
-            if (!_cache.TryGetValue("externalFlights", out external_flights))
-            {
-                external_flights = flights;
-                _cache.Set("externalFlights", flights);
-            }
-            else
-            {
-                foreach (Flight flight in flights)
-                {
-                    external_flights.Add(flight);
-                }
-            }
-        }
-
-        private string parseTime(DateTime time)
-        {
-            //string[] words = time.Split(' ');
-            //int count = 0;
-            StringBuilder parsedTime = new StringBuilder(50);
-            int month = time.Month;
-            int day = time.Day;
-            int year = time.Year;
-            int hours =time.Hour;
-            int minutes =time.Minute;
-            int seconds =time.Second;
-            string _month = ParseTString(month);
-            string _day = ParseTString(day);
-            string _year = ParseTString(year);
-            string _hour = ParseTString(hours);
-            string _minutes = ParseTString(minutes);
-            string _seconds = ParseTString(seconds);
-            parsedTime.Append(_year).Append("-").Append(_month).Append("-").Append(_day).Append("T").Append(_hour).Append(":").Append(_minutes).Append(":").Append(_seconds).Append("Z");
-            string final_parsedtime = parsedTime.ToString();
-            
-            /*foreach (var word in words)
-            {
-                if (count == 0)
-                {
-                    string[] date = word.Split('/');
-                    parsedTime = date[2] + "-" + date[1] + "-" + date[0] + "T";
-                }
-                if (count == 1)
-                {
-                    parsedTime = parsedTime + word + "Z";
-                    break;
-                }
-                count++;
-            }*/
-            return final_parsedtime;
-        }
-
-        private string ParseTString(int val)
-        {
-            return (val < 10) ? "0" + val : val.ToString();
-        }
-
-        private List<Flight> makeList(string json)
-        {
-            try
-            {
-                List<Flight> all_flights = new List<Flight>();
-                JArray json_convert = JsonConvert.DeserializeObject<JArray>(json);
-                // throws exception when server has no flights - stops program
-                if (json_convert != null) // if not empty
-                {
-                    foreach (var elem in json_convert.Children())
-                    {
-                        Flight external_flight = new Flight();
-                        foreach (JProperty flight in elem.Children())
-                        {
-                            external_flight.SetFlight(flight.Name.ToString(), flight.First.ToString());
-                        }
-                        all_flights.Add(external_flight);
-                    }
-                }
-                return all_flights;
-            } 
-            catch (Exception)
-            {
-                return null;
-            }
-            
-        } 
-
         // DELETE: /api/servers/{id}
         [Route("servers/{ServerID}")]
         [HttpDelete("{ServerID}")]
         // test post method with flightplan object from Postman
-        public IActionResult DeleteExternalServerFromListByID(string ServerID)
+        public async Task<IActionResult> DeleteExternalServerFromListByID(string ServerID)
         {
             if (!_cache.TryGetValue("servers", out List<Server> servers))
             {
@@ -306,7 +110,7 @@ namespace FlightControlWeb.Controllers
                 {
                     if (string.Compare(it.ServerId, ServerID) == 0)
                     {
-                        deleteFlightsFromServer(ServerID);
+                        await Task.Run(() => deleteFlightsFromServer(ServerID));
                         servers.Remove(it);
                         return Ok();
                     }
@@ -338,7 +142,7 @@ namespace FlightControlWeb.Controllers
                                 }
                             }
                         } // REMOVE FROM CACHE                        
-                    } 
+                    }
                     if (_cache.TryGetValue("flightplans", out flightPlans))
                     {
                         List<FlightPlan> temp = new List<FlightPlan>(flightPlans);

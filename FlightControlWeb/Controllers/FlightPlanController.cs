@@ -55,15 +55,15 @@ namespace FlightControlWeb.Controllers
         [Route("flightplan")]
         [HttpPost("{flightplan}")]
         // post method with flightplan object from Postman, default is false because it comes from postman\file by client
-        public ActionResult AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
+        public async Task<ActionResult> AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
         {
             //loop through the collection given as a parameter
             foreach (var flightplan in flightplansparameter)
             {
                 string flightID = RandomGenerator.RandomString(6, true);//generate a unique ID for flightplan
-                Flight curflight =  MakeFlight(flightplan, isExternal);// make flight base on flight plan
+                Flight curflight = await Task.Run(() => MakeFlight(flightplan, isExternal));// make flight base on flight plan
                 //convert to UTC 
-                flightplan.Initial_Location.Date_Time = flightplan.Initial_Location.Date_Time.ToUniversalTime();
+                flightplan.Initial_Location.Date_Time = await Task.Run(() => flightplan.Initial_Location.Date_Time.ToUniversalTime());
                 flightplan.ID = flightID;
                 curflight.FlightID = flightID;
                 //check if object with name flightsplans exists in memcache. if not we create one
@@ -97,9 +97,9 @@ namespace FlightControlWeb.Controllers
         [Route("FlightPlan/{id}")]
         [HttpGet("{id}")]
         //test Get method with id as a parameter in order to return flightplan object in the body of the response with the same id 
-        public IActionResult GetFlightPlanByID(string id)
+        public async Task<IActionResult> GetFlightPlanByID(string id)
         {
-            FlightPlan flightplan = LookupFlightByCode(id);
+            FlightPlan flightplan = await Task.Run(() => LookupFlightByCode(id));
 
             if (flightplan != null)
             {

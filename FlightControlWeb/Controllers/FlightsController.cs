@@ -35,7 +35,7 @@ namespace FlightControlWeb.Controllers
         //DELETE: flights/{id}
         [Route("flights/{id}")]
         [HttpDelete("{id}")]
-        public IActionResult DeleteFlightByID(string id)
+        public async Task<IActionResult> DeleteFlightByID(string id)
         {
 
             //check if data structure name "flightplans" exist in memcache , create it
@@ -49,9 +49,23 @@ namespace FlightControlWeb.Controllers
                     //remove b
                     if (string.Compare(it.ID, id) == 0)
                     {
-                        tempPlan.Remove(it);
-                        _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
-                        flights.Remove(id);
+                        await Task.Run(() => tempPlan.Remove(it));
+                        if(_cache.TryGetValue("flights", out Dictionary<string, Flight> flights))
+                        {
+                            await Task.Run(() => flights.Remove(id));
+                        }
+                        if (_cache.TryGetValue("externalFlights", out List<Flight> ex_flights))
+                        {
+                            List<Flight> temp = new List<Flight>(ex_flights);
+                            foreach (Flight _flight in ex_flights)
+                            {    
+                                if (it.ID.CompareTo(_flight.FlightID) == 0)
+                                {
+                                    temp.Remove(_flight);
+                                }
+                            }
+                            ex_flights = temp;
+                        }
                         return Ok();
                     }
                 }
@@ -101,20 +115,19 @@ namespace FlightControlWeb.Controllers
         [Route("flights")]
         [HttpGet]
         //get list of active internal flights based on Datetime given as a parameter
-        public IList<Flight> GetFlightByDate(DateTime relative_to)
+        public async Task<IList<Flight>> GetFlightByDate(DateTime relative_to)
         {
             bool sync_all = Request.Query.ContainsKey("sync_all");
             List<Flight> flightslist = new List<Flight>();
             DateTime utcDate = relative_to.ToUniversalTime();
 
-           ImportExternalFlights();
+            await Task.Run(() => ImportExternalFlights());
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
-            {
-                
+            {        
                 //find all active internal flightplans with time bigger\equal to datetime given as a parameter
                 List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g => 
                 g.Initial_Location.Date_Time <= utcDate);
-                nonPlannedFlights.ForEach(flight =>
+                await Task.Run(() => nonPlannedFlights.ForEach(flight =>
                 {
                     //convert the flightplan's segment to list
                     var segments = flight.Segments.ToList();
@@ -150,8 +163,12 @@ namespace FlightControlWeb.Controllers
 
                                 /* if (!allFlights[flight.ID].Is_external) // local flights
                                  { */
-                                flightslist.Add(allFlights[flight.ID]);
-                                LinearInterpolation(flight, utcDate);
+                                if (allFlights.TryGetValue(flight.ID, out Flight _flight))
+                                {
+                                    flightslist.Add(_flight);
+                                    LinearInterpolation(flight, utcDate);
+                                }
+
 
                                 // }
                             }
@@ -171,7 +188,7 @@ namespace FlightControlWeb.Controllers
                         }
                     }
 
-                });
+                }));
 
                 return flightslist;
             }
@@ -398,35 +415,5 @@ namespace FlightControlWeb.Controllers
             }
 
         }
-        public void DeleteExternalFlight(string id)
-        {
-            //check if data structure name "flightplans" exist in memcache , create it
-            if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
-            {
-                List<FlightPlan> tempPlan = new List<FlightPlan>(flightplans);
-                /*loop throgh flight plans in datasctruture and find the requested flightplan, if it exist then delete it from the flightplans 
-                 * data structure, remove both flightplan and respective flight*/
-                foreach (var it in flightplans)
-                {
-                    //remove b
-                    if (string.Compare(it.ID, id) == 0)
-                    {
-                        tempPlan.Remove(it);
-                        _cache.TryGetValue("externalFlights", out List<Flight> flights);
-                        List<Flight> temp = new List<Flight>(flights);
-                        foreach (Flight _flight in flights)
-                        {
-                            if (_flight.FlightID.CompareTo(id) == 0)
-                            {
-                                temp.Remove(_flight);
-                            }
-                        }
-                        flights = temp;
-                    }
-                }
-                flightplans = tempPlan;
-            }
-        }
-
     }
 }
