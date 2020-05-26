@@ -104,6 +104,18 @@ namespace FlightControlWeb.Controllers
                                 flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
                             }
                         }
+                        var ex_flights = (List<Flight>)_cache.Get("externalFlights");
+                        if (ex_flights != null)
+                        {
+                            foreach (Flight _flight in ex_flights)
+                            {
+                                if (_flight.FlightID.CompareTo(flight.ID) == 0)
+                                {
+                                    _flight.Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                                    _flight.Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                                }
+                            }
+                        }
                         break;
                     }
                     cameFromLati = element.Latitude;
