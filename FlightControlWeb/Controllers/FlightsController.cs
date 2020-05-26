@@ -6,20 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using FlightControlWeb.Model;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FlightControlWeb.Controllers
 {
@@ -252,9 +245,7 @@ namespace FlightControlWeb.Controllers
         private void SaveServerFlights(List<Flight> external_flights, string ServerId)
         {
             List<Flight> tempFlights = new List<Flight>(external_flights);
-            Dictionary<string, List<Flight>> serverFlight;
-            List<Flight> temp;
-            if (!_cache.TryGetValue("server_flights", out serverFlight))
+            if (!_cache.TryGetValue("server_flights", out Dictionary<string, List<Flight>> serverFlight))
             {
                 // serverFlight.Add(URL, external_flights);
                 serverFlight = new Dictionary<string, List<Flight>>()
@@ -266,12 +257,12 @@ namespace FlightControlWeb.Controllers
             else
             {
                 // check if i have the URL then overWrite - add otherwise
-                if (serverFlight.TryGetValue(ServerId, out temp))
+                if (serverFlight.TryGetValue(ServerId, out List<Flight> temp))
                 {
                     if (temp.Count != 0) // already have the server
                     {
                         temp.Clear();
-                        temp = tempFlights;
+                        //temp = tempFlights;
                     }
                     else
                     {
@@ -306,12 +297,11 @@ namespace FlightControlWeb.Controllers
         }
         private void SaveExternalFlightPlans(string flightPlanStr, string id)
         {
-            List<FlightPlan> flightPlans;
             FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
             if (flightPlan.Company_Name != null)
             {
                 flightPlan.ID = id;
-                if (!_cache.TryGetValue("flightplans", out flightPlans))
+                if (!_cache.TryGetValue("flightplans", out List<FlightPlan> flightPlans))
                 {
                     flightPlans = new List<FlightPlan>();
                     flightPlans.Add(flightPlan);
@@ -338,10 +328,8 @@ namespace FlightControlWeb.Controllers
         }
         private void SaveExternalFlights(List<Flight> flights)
         {
-            List<Flight> external_flights;
-            if (!_cache.TryGetValue("externalFlights", out external_flights))
+            if (!_cache.TryGetValue("externalFlights", out List < Flight > external_flights))
             {
-                external_flights = flights;
                 _cache.Set("externalFlights", flights);
             }
             else

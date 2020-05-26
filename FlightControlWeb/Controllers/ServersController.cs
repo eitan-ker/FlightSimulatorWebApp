@@ -110,7 +110,7 @@ namespace FlightControlWeb.Controllers
                 {
                     if (string.Compare(it.ServerId, ServerID) == 0)
                     {
-                        await Task.Run(() => deleteFlightsFromServer(ServerID));
+                        await Task.Run(() => DeleteFlightsFromServer(ServerID));
                         servers.Remove(it);
                         return Ok();
                     }
@@ -118,18 +118,13 @@ namespace FlightControlWeb.Controllers
             }
             return NotFound();
         }
-        private void deleteFlightsFromServer(string id)
+        private void DeleteFlightsFromServer(string id)
         {
-            List<Flight> serverFlights;
-            Dictionary<string, List<Flight>> serverFlightsDic;   // dictionary
-            //Dictionary<string, Flight> flights;
-            List<FlightPlan> flightPlans;
-            List<FlightPlan> externalFlights;
-            if (_cache.TryGetValue("server_flights", out serverFlightsDic))
+            if (_cache.TryGetValue("server_flights", out Dictionary<string, List<Flight>> serverFlightsDic))
             {
-                if (serverFlightsDic.TryGetValue(id, out serverFlights))
+                if (serverFlightsDic.TryGetValue(id, out List<Flight>  serverFlights))
                 {
-                    if (_cache.TryGetValue("externalFlights", out externalFlights))
+                    if (_cache.TryGetValue("externalFlights", out List<FlightPlan>  externalFlights))
                     {
                         List<FlightPlan> temp = new List<FlightPlan>(externalFlights);
                         foreach (Flight server_flights in serverFlights)
@@ -143,7 +138,7 @@ namespace FlightControlWeb.Controllers
                             }
                         } // REMOVE FROM CACHE                        
                     }
-                    if (_cache.TryGetValue("flightplans", out flightPlans))
+                    if (_cache.TryGetValue("flightplans", out List<FlightPlan>  flightPlans))
                     {
                         List<FlightPlan> temp = new List<FlightPlan>(flightPlans);
                         foreach (Flight server_flights in serverFlights)
