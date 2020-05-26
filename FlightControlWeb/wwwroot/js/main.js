@@ -237,7 +237,11 @@ function showFlightListByClass(flightList,classFlightList) {
             li.classList.add('selected');
         }
         let curflightID = flight.flightID;
-        li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
+        if (classFlightList === ".exflight-list") {
+            li.innerHTML = `${flight.flightID} - ${flight.company_name}`;
+        } else {
+            li.innerHTML = `${flight.flightID} - ${flight.company_name} <a onclick="deleteflightAfterPressingX('${curflightID}');" href="#">X</a>`;
+        }
         li.id = flight.flightID;
         ul.append(li);
     });
