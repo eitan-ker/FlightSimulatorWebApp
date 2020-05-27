@@ -55,11 +55,10 @@ namespace FlightControlWeb.Controllers
         [Route("flightplan")]
         [HttpPost("{flightplan}")]
         // post method with flightplan object from Postman, default is false because it comes from postman\file by client
-        public async Task<ActionResult> AddFlightPlans(IEnumerable<FlightPlan> flightplansparameter, bool isExternal = false)
+        public async Task<ActionResult> AddFlightPlans(FlightPlan flightplan, bool isExternal = false)
         {
-            //loop through the collection given as a parameter
-            foreach (var flightplan in flightplansparameter)
-            {
+            
+            
                 string flightID = RandomGenerator.RandomString(6, true);//generate a unique ID for flightplan
                 Flight curflight = await Task.Run(() => MakeFlight(flightplan, isExternal));// make flight base on flight plan
                 //convert to UTC 
@@ -88,7 +87,7 @@ namespace FlightControlWeb.Controllers
                     _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
                     flights.Add(curflight.FlightID, curflight);
                 }
-            }
+            
             return Ok();
         }
 
