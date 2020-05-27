@@ -204,10 +204,11 @@ namespace FlightControlWeb.Controllers
             _cache.TryGetValue("servers", out List<Server> allServers);
             if (allServers != null)
             {
-                foreach (Server server in allServers)
+                try
                 {
-                    try
+                    foreach (Server server in allServers)
                     {
+
                         string request_str = server.ServerUrl + "/api/Flights?relative_to=";
                         DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
                         string CurTime = ParseTime(utcDate);
@@ -234,12 +235,14 @@ namespace FlightControlWeb.Controllers
                             SaveServerFlights(external_flights, server.ServerId);
                         }
 
-                    }
-                    catch
-                    {
 
                     }
                 }
+                catch
+                {
+                    Console.WriteLine("some problem accoured during run");
+                }
+                    
             }
         }
         private void SaveServerFlights(List<Flight> external_flights, string ServerId)
@@ -262,11 +265,10 @@ namespace FlightControlWeb.Controllers
                     if (temp.Count != 0) // already have the server
                     {
                         temp.Clear();
-                        //temp = tempFlights;
                     }
-                    else
+                    foreach(Flight _flight in tempFlights)
                     {
-                        temp = tempFlights;
+                        temp.Add(_flight);
                     }
                 }
                 else

@@ -124,14 +124,14 @@ namespace FlightControlWeb.Controllers
             {
                 if (serverFlightsDic.TryGetValue(id, out List<Flight>  serverFlights))
                 {
-                    if (_cache.TryGetValue("externalFlights", out List<FlightPlan>  externalFlights))
+                    if (_cache.TryGetValue("externalFlights", out List<Flight>  externalFlights))
                     {
-                        List<FlightPlan> temp = new List<FlightPlan>(externalFlights);
+                        List<Flight> temp = new List<Flight>(externalFlights);
                         foreach (Flight server_flights in serverFlights)
                         {
-                            foreach (FlightPlan external_flight in temp)
+                            foreach (Flight external_flight in temp)
                             {
-                                if (server_flights.FlightID.CompareTo(external_flight.ID) == 0)
+                                if (server_flights.FlightID.CompareTo(external_flight.FlightID) == 0)
                                 {
                                     externalFlights.Remove(external_flight);
                                 }
