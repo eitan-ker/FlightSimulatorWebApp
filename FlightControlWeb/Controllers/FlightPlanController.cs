@@ -85,8 +85,19 @@ namespace FlightControlWeb.Controllers
                 {
                     flightplans.Add(flightplan);
                     _cache.TryGetValue("flights", out Dictionary<string, Flight> flights);
+                if (flights != null)
+                {
                     flights.Add(curflight.FlightID, curflight);
+
+                } else
+                {
+                    Dictionary<string, Flight> newFlight = new Dictionary<string, Flight>()
+                    {
+                        { curflight.FlightID, curflight }
+                    };
+                    _cache.Set("flights", newFlight);
                 }
+            }
             
             return Ok();
         }
