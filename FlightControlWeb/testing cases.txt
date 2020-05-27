@@ -1,0 +1,11 @@
+1. add flight to external server and add the server to db
+expected result - you see the flight on map
+actual result-
+
+2. do 1 and delete the server from db
+expected result-you wont see the flight anymore
+actual result-
+
+3. do 1 from two different servers
+expected result - you see two flights on map
+actual result-
