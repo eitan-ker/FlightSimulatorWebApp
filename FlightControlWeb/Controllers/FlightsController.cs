@@ -234,8 +234,6 @@ namespace FlightControlWeb.Controllers
                             FindExternalFlightPlans(external_flights, server.ServerUrl);
                             SaveServerFlights(external_flights, server.ServerId);
                         }
-
-
                     }
                 }
                 catch
@@ -282,8 +280,8 @@ namespace FlightControlWeb.Controllers
             string request_str = URL + "/api/FlightPlan/";
             foreach (Flight flight in external_flights)
             {
-                request_str = request_str + flight.FlightID;
-                WebRequest request = WebRequest.Create(request_str);
+                string _request = request_str + flight.FlightID;
+                WebRequest request = WebRequest.Create(_request);
                 request.Method = "GET";
                 HttpWebResponse response = null;
                 response = (HttpWebResponse)request.GetResponse();
