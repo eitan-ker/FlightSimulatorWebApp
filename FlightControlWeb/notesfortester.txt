@@ -1,15 +1,5 @@
-1. make sure that when you post a new flightplan, send the JSON as an array of objects like that:
-[
-{
-      flightplan1 object
-},
-{
-	  flightplan2 object
-},
-...
-]
-2. we did unit test on : 
-3. make sure that when you post a new server - the serverURL needs to be without "/" at the end. example of post
+1. we did unit test on : SetFlight function in Flight class
+2. make sure that when you post a new server - the serverURL needs to be without "/" at the end. example of post
 {
 "ServerId": "[SERVER_ID]",
 "ServerURL": "http://ronyut3.atwebpages.com/ap2"
