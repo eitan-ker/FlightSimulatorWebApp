@@ -12,7 +12,6 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
-        private readonly IMemoryCache _cache;
 
         [TestMethod]
         public void TestMethod1() // test Server class
@@ -32,12 +31,12 @@ namespace UnitTestProject1
             test_flight2.SetFlight("is_external", Convert.ToString(test_flight1.Is_external));
 
             // Assert
-            if (!isEqualFlights(test_flight1, test_flight2))
+            if (!IsEqualFlights(test_flight1, test_flight2))
             {
                 Assert.Fail();
             }
         }
-        bool isEqualFlights(Flight f1, Flight f2)
+        bool IsEqualFlights(Flight f1, Flight f2)
         {
             if (f1.FlightID.CompareTo(f2.FlightID) != 0) { return false; }
             if (f1.Longitude != f2.Longitude) { return false; }
