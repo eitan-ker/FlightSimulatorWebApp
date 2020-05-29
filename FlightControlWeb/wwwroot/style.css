@@ -28,10 +28,10 @@ ul li {
     float: left;
 }
 .myflight-bar {
-    
+    overflow-x: auto;
 }
 .externalflight-bar {
-
+    overflow-x: auto;
 }
 /* Optional: Makes the sample page fill the window. */
 html, body {

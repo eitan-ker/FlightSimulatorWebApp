@@ -249,7 +249,7 @@ function showFlightListByClass(flightList,classFlightList) {
 }
 //after X button is pressed , it will delete flight from DB and map
 async function deleteflightAfterPressingX(id) {
-    let deleteurl = "https://localhost:44383/api/Flights/" + id;
+    let deleteurl = "/api/Flights/" + id;
     let settingss = {
         "url": deleteurl,
         "method": "DELETE",
