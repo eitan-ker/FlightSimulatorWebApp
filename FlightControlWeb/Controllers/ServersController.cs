@@ -18,7 +18,7 @@ namespace FlightControlWeb.Controllers
 {
     [Route("api")]
     [ApiController]
-    public class ServersController : ControllerBase
+    public class ServersController : ControllerBase, IServerController
     {
         private readonly IMemoryCache _cache;
         public ServersController(IMemoryCache cache)
