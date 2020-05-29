@@ -26,6 +26,7 @@ ul li {
     width: 100vh;
     background: green;
     float: left;
+    display:block;
 }
 .myflight-bar {
     overflow-x: auto;
