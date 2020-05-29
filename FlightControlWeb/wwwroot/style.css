@@ -26,13 +26,14 @@ ul li {
     width: 100vh;
     background: green;
     float: left;
-    display:block;
+    display: block;
+    overflow-x: auto;
 }
 .myflight-bar {
-    overflow-x: auto;
+    
 }
 .externalflight-bar {
-    overflow-x: auto;
+    
 }
 /* Optional: Makes the sample page fill the window. */
 html, body {
