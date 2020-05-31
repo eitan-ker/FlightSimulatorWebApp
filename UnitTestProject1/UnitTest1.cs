@@ -11,15 +11,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-using FlightControlWeb.Controllers;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.TestPlatform;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace UnitTestProject1
