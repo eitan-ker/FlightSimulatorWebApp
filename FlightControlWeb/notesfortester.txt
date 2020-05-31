@@ -1,3 +1,4 @@
+name: Meni Ashurov. ID: 204064257
 1. we did unit test on : SetFlight function in Flight class
 2. make sure that when you post a new server - the serverURL needs to be without "/" at the end. example of post
 {
