@@ -30,42 +30,43 @@ namespace FlightControlWeb.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFlightByID(string id)
         {
-
             //check if data structure name "flightplans" exist in memcache , create it
-            if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
+            _cache.TryGetValue("flightplans", out List<FlightPlan> flightplans);
+            if (flightplans == null)
             {
-                List<FlightPlan> tempPlan = new List<FlightPlan>(flightplans);
-                /*loop throgh flight plans in datasctruture and find the requested flightplan, if it exist then delete it from the flightplans 
-                 * data structure, remove both flightplan and respective flight*/
-                foreach (var it in flightplans)
+                return NotFound();
+            }
+            List<FlightPlan> tempPlan = new List<FlightPlan>(flightplans);
+            /*loop throgh flight plans in datasctruture and find the requested flightplan, if it exist then delete it from the flightplans 
+             * data structure, remove both flightplan and respective flight*/
+            foreach (var it in flightplans)
+            {
+                //remove b
+                if (string.Compare(it.ID, id) == 0)
                 {
-                    //remove b
-                    if (string.Compare(it.ID, id) == 0)
-                    {
-                        await Task.Run(() => tempPlan.Remove(it));
-                        if(_cache.TryGetValue("flights", out Dictionary<string, Flight> flights))
-                        {
-                            await Task.Run(() => flights.Remove(id));
-                        }
-                        if (_cache.TryGetValue("externalFlights", out List<Flight> ex_flights))
-                        {
-                            List<Flight> temp = new List<Flight>(ex_flights);
-                            foreach (Flight _flight in ex_flights)
-                            {    
-                                if (it.ID.CompareTo(_flight.FlightID) == 0)
-                                {
-                                    temp.Remove(_flight);
-                                }
-                            }
-                            ex_flights = temp;
-                        }
-                        return Ok();
-                    }
+                    await Task.Run(() => DeleteFlightCompareId(it, id, tempPlan));
+                    flightplans.Clear();
+                    AddFlightPlan(tempPlan, flightplans);
+                    return Ok();
                 }
-                flightplans = tempPlan;
             }
             //there isnt a datastructure name "flightplans" in memcache
             return NotFound();
+        }
+        private void AddFlightPlan(List<FlightPlan> tempPlan, List<FlightPlan> flightplans)
+        {
+            foreach (FlightPlan plan in tempPlan)
+            {
+                flightplans.Add(plan);
+            }
+        }
+        private void DeleteFlightCompareId(FlightPlan it, string id, List<FlightPlan> tempPlan)
+        {
+            tempPlan.Remove(it);
+            if (_cache.TryGetValue("flights", out Dictionary<string, Flight> flights))
+            {
+                flights.Remove(id);
+            }
         }
         //linear interpolation function to calculate relative distance the plane flew to the destination of the current segment
         private void LinearInterpolation(FlightPlan flight, DateTime utcDate)
@@ -128,9 +129,9 @@ namespace FlightControlWeb.Controllers
 
             await Task.Run(() => ImportExternalFlights());
             if (_cache.TryGetValue("flightplans", out List<FlightPlan> flightplans))
-            {        
+            {
                 //find all active internal flightplans with time bigger\equal to datetime given as a parameter
-                List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g => 
+                List<FlightPlan> nonPlannedFlights = flightplans.FindAll(g =>
                 g.Initial_Location.Date_Time <= utcDate);
                 await Task.Run(() => nonPlannedFlights.ForEach(flight =>
                 {
@@ -142,7 +143,7 @@ namespace FlightControlWeb.Controllers
 
                     if (flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
                     {
-                        
+
                         if (!sync_all)
                         {
                             //add internal flights
@@ -235,7 +236,8 @@ namespace FlightControlWeb.Controllers
                                 FindExternalFlightPlans(external_flights, server.ServerUrl);
                                 SaveServerFlights(external_flights, server.ServerId);
                             }
-                        } catch
+                        }
+                        catch
                         {
                             Console.WriteLine("problem in reading da");
 
@@ -247,7 +249,7 @@ namespace FlightControlWeb.Controllers
                 {
                     Console.WriteLine("some problem accoured during run");
                 }
-                    
+
             }
         }
         private void SaveServerFlights(List<Flight> external_flights, string ServerId)
@@ -271,7 +273,7 @@ namespace FlightControlWeb.Controllers
                     {
                         temp.Clear();
                     }
-                    foreach(Flight _flight in tempFlights)
+                    foreach (Flight _flight in tempFlights)
                     {
                         temp.Add(_flight);
                     }
@@ -301,11 +303,12 @@ namespace FlightControlWeb.Controllers
                         strResult = sr.ReadToEnd();
                         SaveExternalFlightPlans(strResult, flight.FlightID); // if flight plan doesn;t have the id
                         sr.Close();
-                    } catch
+                    }
+                    catch
                     {
                         Console.WriteLine("problem readnig from server");
                     }
-                    
+
                 }
             }
         }
@@ -340,7 +343,8 @@ namespace FlightControlWeb.Controllers
                         }
                     }
                 }
-            } catch
+            }
+            catch
             {
                 Console.WriteLine("problem in saving external flight plan");
 
@@ -348,7 +352,7 @@ namespace FlightControlWeb.Controllers
         }
         private void SaveExternalFlights(List<Flight> flights)
         {
-            if (!_cache.TryGetValue("externalFlights", out List < Flight > external_flights))
+            if (!_cache.TryGetValue("externalFlights", out List<Flight> external_flights))
             {
                 _cache.Set("externalFlights", flights);
             }
@@ -361,7 +365,8 @@ namespace FlightControlWeb.Controllers
                         external_flights.Add(flight);
                     }
 
-                } else
+                }
+                else
                 {
                     foreach (Flight flight in flights)
                     {
@@ -379,7 +384,7 @@ namespace FlightControlWeb.Controllers
                         }
                     }
                 }
-                
+
             }
         }
         private string ParseTime(DateTime time)
