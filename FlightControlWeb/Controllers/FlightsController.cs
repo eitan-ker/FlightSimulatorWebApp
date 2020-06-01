@@ -240,49 +240,45 @@ namespace FlightControlWeb.Controllers
             {
                 try
                 {
-                    foreach (Server server in allServers)
-                    {
-
-                        string request_str = server.ServerUrl + "/api/Flights?relative_to=";
-                        DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
-                        string CurTime = ParseTime(utcDate);
-                        request_str = request_str + CurTime + "&sync_all";
-                        WebRequest request = WebRequest.Create(request_str);
-                        request.Method = "GET";
-                        HttpWebResponse response = null;
-                        response = (HttpWebResponse)request.GetResponse();
-                        string strResult = "";
-                        List<Flight> external_flights;
-                        try
-                        {
-                            using (Stream stream = response.GetResponseStream())
-                            {
-                                StreamReader sr = new StreamReader(stream);
-                                strResult = sr.ReadToEnd();
-                                external_flights = MakeList(strResult);
-                                sr.Close();
-                            }
-                            // save in cache
-                            if (external_flights != null)
-                            {
-                                SaveExternalFlights(external_flights);
-                                FindExternalFlightPlans(external_flights, server.ServerUrl);
-                                SaveServerFlights(external_flights, server.ServerId);
-                            }
-                        }
-                        catch
-                        {
-                            Console.WriteLine("problem in reading da");
-
-                        }
-
-                    }
+                    ImportExternalFlightsTry(allServers);
                 }
                 catch
                 {
                     Console.WriteLine("some problem accoured during run");
                 }
 
+            }
+        }
+
+        private void ImportExternalFlightsTry(List<Server> allServers)
+        {
+            foreach (Server server in allServers)
+            {
+
+                string request_str = server.ServerUrl + "/api/Flights?relative_to=";
+                DateTime utcDate = DateTime.UtcNow.ToUniversalTime();
+                string CurTime = ParseTime(utcDate);
+                request_str = request_str + CurTime + "&sync_all";
+                WebRequest request = WebRequest.Create(request_str);
+                request.Method = "GET";
+                HttpWebResponse response = null;
+                response = (HttpWebResponse)request.GetResponse();
+                string strResult = "";
+                List<Flight> external_flights;
+                using (Stream stream = response.GetResponseStream())
+                {
+                    StreamReader sr = new StreamReader(stream);
+                    strResult = sr.ReadToEnd();
+                    external_flights = MakeList(strResult);
+                    sr.Close();
+                }
+                // save in cache
+                if (external_flights != null)
+                {
+                    SaveExternalFlights(external_flights);
+                    FindExternalFlightPlans(external_flights, server.ServerUrl);
+                    SaveServerFlights(external_flights, server.ServerId);
+                }
             }
         }
         private void SaveServerFlights(List<Flight> external_flights, string ServerId)
@@ -303,19 +299,24 @@ namespace FlightControlWeb.Controllers
                 // check if i have the URL then overWrite - add otherwise
                 if (serverFlight.TryGetValue(ServerId, out List<Flight> temp))
                 {
-                    if (temp.Count != 0) // already have the server
-                    {
-                        temp.Clear();
-                    }
-                    foreach (Flight _flight in tempFlights)
-                    {
-                        temp.Add(_flight);
-                    }
+                    SaveServerFlightsElseIf(temp, tempFlights);
                 }
                 else
                 {
                     serverFlight.Add(ServerId, tempFlights);
                 }
+            }
+        }
+
+        private void SaveServerFlightsElseIf(List<Flight> temp, List<Flight> tempFlights)
+        {
+            if (temp.Count != 0) // already have the server
+            {
+                temp.Clear();
+            }
+            foreach (Flight _flight in tempFlights)
+            {
+                temp.Add(_flight);
             }
         }
         private void FindExternalFlightPlans(List<Flight> external_flights, string URL)
@@ -353,29 +354,7 @@ namespace FlightControlWeb.Controllers
                 FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
                 if (flightPlan.Company_Name != null)
                 {
-                    flightPlan.ID = id;
-                    if (!_cache.TryGetValue("flightplans", out List<FlightPlan> flightPlans))
-                    {
-                        flightPlans = new List<FlightPlan>();
-                        flightPlans.Add(flightPlan);
-                        _cache.Set("flightplans", flightPlans);
-                    }
-                    else
-                    {
-                        int count = 0;
-                        foreach (FlightPlan plan in flightPlans) // if new flight id is different from all flights
-                        {
-                            if (flightPlan.ID.CompareTo(plan.ID) != 0)
-                            {
-                                count++;
-                            }
-                        }
-                        if (count == flightPlans.Count)
-                        {
-                            flightPlans.Add(flightPlan);
-
-                        }
-                    }
+                    SaveExternalFlightPlansIf(flightPlan, id);
                 }
             }
             catch
@@ -384,6 +363,39 @@ namespace FlightControlWeb.Controllers
 
             }
         }
+
+        private void SaveExternalFlightPlansIf(FlightPlan flightPlan, string id)
+        {
+            flightPlan.ID = id;
+            if (!_cache.TryGetValue("flightplans", out List<FlightPlan> flightPlans))
+            {
+                flightPlans = new List<FlightPlan>();
+                flightPlans.Add(flightPlan);
+                _cache.Set("flightplans", flightPlans);
+            }
+            else
+            {
+                int count = 0;
+                foreach (FlightPlan plan in flightPlans) // if new flight id is different from all flights
+                {
+                    count = count + SaveExternalFlightPlansIfElseLoopIf(flightPlan, plan, count);
+                }
+                if (count == flightPlans.Count)
+                {
+                    flightPlans.Add(flightPlan);
+
+                }
+            }
+        }
+        private int SaveExternalFlightPlansIfElseLoopIf(FlightPlan flightPlan, FlightPlan plan, int count)
+        {
+            if (flightPlan.ID.CompareTo(plan.ID) != 0)
+            {
+                count++;
+            }
+            return count;
+        }
+
         private void SaveExternalFlights(List<Flight> flights)
         {
             if (!_cache.TryGetValue("externalFlights", out List<Flight> external_flights))
