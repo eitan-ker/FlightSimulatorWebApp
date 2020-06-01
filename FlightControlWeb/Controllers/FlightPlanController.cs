@@ -2,7 +2,6 @@
 using FlightControlWeb.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
