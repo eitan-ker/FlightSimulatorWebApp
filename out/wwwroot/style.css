@@ -1,0 +1,59 @@
+﻿@media (min-width: 768px) {
+    .min-vh-md-50 {
+        min-height: 50% !important;
+    }
+}
+#map {
+    height: 100%;
+    width: 100%;
+}
+.flights-details-bar {
+    background: green;
+    height: 30vh;
+    width: 100%;
+    display: block;
+    overflow: hidden;
+    
+}
+ul li.selected {
+    color: #f3f32b;
+    font-weight: bold;
+}
+ul li {
+    cursor:pointer;
+}
+.flights-details {
+    width: 100vh;
+    background: green;
+    float: left;
+    display: block;
+    overflow-x: auto;
+}
+.myflight-bar {
+    
+}
+.externalflight-bar {
+    
+}
+/* Optional: Makes the sample page fill the window. */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+.dropzone {
+    margin-bottom: 20%;
+    padding: 10%;
+    float: left;
+    width: 100%;
+    height: 20%;
+    border: 2px dashed #ccc;
+    color: #ccc;
+    line-height: 30px;
+    text-align: center;
+}
+.dropzone.dragover {
+    border-color:#000;
+    color:#000;
+}
