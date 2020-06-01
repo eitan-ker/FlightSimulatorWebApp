@@ -86,11 +86,11 @@ function formatDate(date) {
 async function getActiveFlights() {
     const currentDate = formatDate(new Date());
     
-    //$.ajax(`https://localhost:44383/api/Flights?relative_to=${currentDate}`).done((data) => {
+    //$.ajax(`/api/Flights?relative_to=${currentDate}`).done((data) => {
        //console.log(data);
     //})
     //should be: 2020-05-13T17:54:30
-    let url = "https://localhost:44383/api/Flights?relative_to=" + currentDate +"&"+'sync_all';
+    let url = "/api/Flights?relative_to=" + currentDate +"&"+'sync_all';
     let settings = {
         "url": url,
         "method": "GET",
@@ -102,7 +102,7 @@ async function getActiveFlights() {
 //get active flightplan by id
 async function getActiveFlightplan(id) {
     
-    //$.ajax(`https://localhost:44383/api/Flights?relative_to=${currentDate}`).done((data) => {
+    //$.ajax(`/api/Flights?relative_to=${currentDate}`).done((data) => {
        //console.log(data);
     //})
     //should be: 2020-05-13T17:54:30

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\out\</OutputPath>
+    <OutputPath>..\out</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +16,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.2" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="mkdir &quot;$(SolutionDir)out&quot;&#xD;&#xA;&#xD;mkdir &quot;$(SolutionDir)out\wwwroot&quot;&#xD;&#xD;&#xA;xcopy $(ProjectDir)appsettings.json $(SolutionDir)out /Y&#xD;&#xD;&#xA;&#xD;xcopy /E /Y &quot;$(ProjectDir)wwwroot&quot; &quot;$(SolutionDir)wwwroot&quot;&#xD;&#xD;&#xD;&#xA;xcopy /E /Y &quot;$(ProjectDir)wwwroot&quot; &quot;$(SolutionDir)out/wwwroot&quot;&#xD;&#xA;" />
+  </Target>
 
 
 </Project>
