@@ -122,7 +122,7 @@ function initMap() {
         center: { lat: 0, lng: 0 },
         zoom: 2,
         minZoom: 1
-    }
+    };
 
     //new Map
     const map = new google.maps.Map(document.getElementById('map'), options);
@@ -133,8 +133,8 @@ function initMap() {
         if (flightPath) {
             flightPath.setMap(null);
         }
-    })
-    
+    });
+
     return map;
 }
 ////Add marker
@@ -156,7 +156,7 @@ function addFlight(flight, gmap) {
         icon: iconImage,
         title: flight.company_name + '-' + flight.flightID
         //check for custom icon
-    })
+    });
     marker.addListener('click', async function () {
         //marker.icon = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
         selectedFlightID = flight.flightID;
@@ -168,8 +168,8 @@ function addFlight(flight, gmap) {
 async function showFlightDetailsByID(flightId,gmap) {
     const curflightplan = await getActiveFlightplan(flightId);
     paintFlightPath(curflightplan, gmap);
-    showFlightDetails(curflightplan)
-    
+    showFlightDetails(curflightplan);
+
 }
 //draw flightplan track on map
 function paintFlightPath(flightPlan, gmap) {
@@ -272,14 +272,14 @@ function showFlightDetails(flightplan) {
     $(".flights-details").empty();
     const table = document.createElement("table");
     table.border = "1";
-    table.width="100%"
+    table.width="100%";
     const row = table.insertRow(0);
     const ID_header = row.insertCell(0);
     const fromLocation_header = row.insertCell(1);
     const toLocation_header = row.insertCell(2);
     const companyName_header = row.insertCell(3);
     const passengers_header = row.insertCell(4);
-    ID_header.innerHTML = "Flight ID"
+    ID_header.innerHTML = "Flight ID";
     fromLocation_header.innerHTML = "From Location";
     toLocation_header.innerHTML =   "To Location";
     companyName_header.innerHTML = "Company Name";
@@ -295,7 +295,7 @@ function showFlightDetails(flightplan) {
     let initial_location = flightplan.initial_Location;
     ID.innerHTML = flightplan.id;
     fromLocation.innerHTML = "Lat:" + initial_location.latitude + " Long:" + initial_location.longitude;
-    toLocation.innerHTML = "Lat:" + final_destination.latitude + " Long:" + final_destination.longitude
+    toLocation.innerHTML = "Lat:" + final_destination.latitude + " Long:" + final_destination.longitude;
     companyName.innerHTML = `<b>${flightplan.company_Name}</b>`;
     passengers.innerHTML = flightplan.passengers;
     $(".flights-details").append(table);
