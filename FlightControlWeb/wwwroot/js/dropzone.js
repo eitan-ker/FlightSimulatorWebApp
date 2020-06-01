@@ -12,7 +12,7 @@
                 }
             }
         }
-        xhr.open("POST", "https://localhost:44383/api/flightplan");
+        xhr.open("POST", "/api/flightplan");
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(files);
     }
