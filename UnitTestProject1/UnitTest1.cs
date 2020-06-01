@@ -1,6 +1,4 @@
-using FlightControlWeb;
-using FlightControlWeb.Controllers;
-using FlightControlWeb.Model;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,6 +10,9 @@ using System.IO;
 using System.Threading.Tasks;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using System.Linq;
+using FlightControlWeb;
+using FlightControlWeb.Controllers;
+using FlightControlWeb.Model;
 
 namespace UnitTestProject1
 {
@@ -24,7 +25,7 @@ namespace UnitTestProject1
         public void SetFlightTest_TwoSameFlight_ReturnsTrue_() // test Server class
         {
             // Arrange
-            Flight test_flight1 = new Flight("testId", 32, 32, 100, "Test_Airways", DateTime.UtcNow, false);
+            Flight test_flight1 = new Flight("testId", 32, 32, 100, "Test_Airways", DateTime.UtcNow, true);
             Flight test_flight2 = new Flight();
 
             // Act

@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
     <None Include="wwwroot\Maps.html" />
     <None Include="wwwroot\style.css" />
   </ItemGroup>
