@@ -34,7 +34,7 @@ namespace FlightControlWeb
             }
             if (name.Equals("is_external")) 
             {
-                this.Is_external = Convert.ToBoolean(value);
+                this.Is_external = Convert.ToBoolean(true);
             }
         }
         public Flight() { } // default constructor

@@ -59,12 +59,12 @@ namespace FlightControlWeb.Controllers
         {
             
             
-                string flightID = RandomGenerator.RandomString(6, true);//generate a unique ID for flightplan
+                string flightId = RandomGenerator.RandomString(6, true);//generate a unique ID for flightplan
                 Flight curflight = await Task.Run(() => MakeFlight(flightplan, isExternal));// make flight base on flight plan
                 //convert to UTC 
                 flightplan.Initial_Location.Date_Time = await Task.Run(() => flightplan.Initial_Location.Date_Time.ToUniversalTime());
-                flightplan.ID = flightID;
-                curflight.FlightID = flightID;
+                flightplan.ID = flightId;
+                curflight.FlightID = flightId;
                 //check if object with name flightsplans exists in memcache. if not we create one
                 if (!_cache.TryGetValue("flightplans", out IList<FlightPlan> flightplans))
                 {
@@ -97,9 +97,9 @@ namespace FlightControlWeb.Controllers
                     };
                     _cache.Set("flights", newFlight);
                 }
-            }
+                }
             
-            return Ok();
+                return Ok();
         }
 
 
@@ -107,7 +107,7 @@ namespace FlightControlWeb.Controllers
         [Route("FlightPlan/{id}")]
         [HttpGet("{id}")]
         //test Get method with id as a parameter in order to return flightplan object in the body of the response with the same id 
-        public async Task<IActionResult> GetFlightPlanByID(string id)
+        public async Task<IActionResult> GetFlightPlanById(string id)
         {
             FlightPlan flightplan = await Task.Run(() => LookupFlightByCode(id));
 
@@ -135,10 +135,10 @@ namespace FlightControlWeb.Controllers
             return null;
         }
         //helper function to create Flight object from FlightPlan object
-        private Flight MakeFlight(FlightPlan flightplan, bool is_external)
+        private Flight MakeFlight(FlightPlan flightplan, bool isExternal)
         {
             Flight flight = new Flight(flightplan.ID, flightplan.Initial_Location.Longitude, flightplan.Initial_Location.Latitude,
-                flightplan.Passengers, flightplan.Company_Name, flightplan.Initial_Location.Date_Time, is_external);
+                flightplan.Passengers, flightplan.Company_Name, flightplan.Initial_Location.Date_Time, isExternal);
             return flight;
         }
     }

@@ -305,11 +305,13 @@ function showFlightDetails(flightplan) {
 function removeSelectedFlights() {
     $("ul li.selected").removeClass("selected");
 }
-$(".myflight-list, .exflight-list").on('click', (event) => {
-    const flightID = event.target.id;
-    if (flightID) {
-        selectedFlightID = flightID;
-        showFlightDetailsByID(flightID,map);
-    }
-    
-})
+
+$(".myflight-list, .exflight-list").on('click',
+    (event) => {
+        const flightID = event.target.id;
+        if (flightID) {
+            selectedFlightID = flightID;
+            showFlightDetailsByID(flightID, map);
+        }
+
+    });
