@@ -25,7 +25,7 @@
                 toastr.error(`${e.dataTransfer.files[i].name} is not a json file!`);
                 continue;
             }
-            upload(e.dataTransfer.files[i])
+            upload(e.dataTransfer.files[i]);
         }
     };
 
