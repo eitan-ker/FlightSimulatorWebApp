@@ -1,6 +1,4 @@
-﻿
-
-let active_flights = [];
+﻿let active_flights = [];
 let allMarkers = [];
 let flightPath = null;
 let map = null;
@@ -22,25 +20,40 @@ let selectedFlightID = null;
 //add marker on map and show flight details of the active flights
 async function init(map) {
     let check_if_selected_flight_is_still_active = false;
-    active_flights = await getActiveFlights();
-    if (active_flights) {
-        removemarkertrails();
-        active_flights.forEach((flight) => {
-            //check if selectedflight is still active, if not then the boolean will turn to true
-            if (selectedFlightID != null && selectedFlightID == flight.flightID && check_if_selected_flight_is_still_active == false) {
-                check_if_selected_flight_is_still_active = true;
+    try {
+        active_flights = await getActiveFlights();
+        if (active_flights) {
+            removemarkertrails();
+            active_flights.forEach((flight) => {
+                //check if selectedflight is still active, if not then the boolean will turn to true
+                if (selectedFlightID != null && selectedFlightID == flight.flightID && check_if_selected_flight_is_still_active == false) {
+                    check_if_selected_flight_is_still_active = true;
+                }
+                addFlight(flight, map);
+            });
+            showFlightList(active_flights);
+            //check if marked flight is no longer active, if so then delete its path on map and its flight details
+            if (check_if_selected_flight_is_still_active == false) {
+                paintFlightPath(null, map);
+                $(".flights-details").empty();
             }
-            addFlight(flight, map);
-        });
-        showFlightList(active_flights);
-        //check if marked flight is no longer active, if so then delete its path on map and its flight details
-        if (check_if_selected_flight_is_still_active == false) {
-            paintFlightPath(null, map);
-            $(".flights-details").empty();
         }
+        //recursive call for init every 1 sec
+        setTimeout(init, 1000, map);
     }
-    //recursive call for init every 1 sec
-    setTimeout(init, 1000, map);
+    catch (err) {
+        if (err) {
+            if (err.statusText === 'error') {
+                toastr.error("Server is down");
+            } else {
+                toastr.error("Error " + err.statusText);
+            }
+           
+        } else {
+            toastr.error("Something when wrong");
+        }
+       
+    }
     //console.log(active_flights);
 }
 //remove current markers on map before new flights get request comes active
@@ -165,11 +178,24 @@ function addFlight(flight, gmap) {
     allMarkers.push(marker);
 }
 //get flightplan details to show on bar from the right of the page and draw its course on map
-async function showFlightDetailsByID(flightId,gmap) {
-    const curflightplan = await getActiveFlightplan(flightId);
-    paintFlightPath(curflightplan, gmap);
-    showFlightDetails(curflightplan);
+async function showFlightDetailsByID(flightId, gmap) {
+    try {
+        const curflightplan = await getActiveFlightplan(flightId);
+        paintFlightPath(curflightplan, gmap);
+        showFlightDetails(curflightplan);
+    }
+     catch (err) {
+        if (err) {
+            if (err.statusText === 'error') {
+                toastr.error("Server is down");
+            } else {
+                toastr.error("Error " + err.statusText);
+            }
+        } else {
+            toastr.error("Something when wrong");
+        }
 
+    }
 }
 //draw flightplan track on map
 function paintFlightPath(flightPlan, gmap) {
@@ -272,19 +298,29 @@ function showFlightDetails(flightplan) {
     $(".flights-details").empty();
     const table = document.createElement("table");
     table.border = "1";
-    table.width="100%";
-    const row = table.insertRow(0);
-    const ID_header = row.insertCell(0);
-    const fromLocation_header = row.insertCell(1);
-    const toLocation_header = row.insertCell(2);
-    const companyName_header = row.insertCell(3);
-    const passengers_header = row.insertCell(4);
+    table.width = "100%";
+    table.classList.add("table");
+  
+    const tHeader = table.createTHead();
+    const row = tHeader.insertRow(0);
+
+   
+    const ID_header = document.createElement("th");
+    const fromLocation_header = document.createElement("th");
+    const toLocation_header = document.createElement("th");
+    const companyName_header = document.createElement("th");
+    const passengers_header = document.createElement("th");
     ID_header.innerHTML = "Flight ID";
+    row.appendChild(ID_header);
     fromLocation_header.innerHTML = "From Location";
-    toLocation_header.innerHTML =   "To Location";
+    row.appendChild(fromLocation_header);
+    toLocation_header.innerHTML = "To Location";
+    row.appendChild(toLocation_header);
     companyName_header.innerHTML = "Company Name";
+    row.appendChild(companyName_header);
     passengers_header.innerHTML = "# of Passengers";
-    const row2 = table.insertRow(1);
+    row.appendChild(passengers_header);
+    const row2 = table.createTBody().insertRow(0);
     const ID = row2.insertCell(0);
     const fromLocation = row2.insertCell(1);
     const toLocation = row2.insertCell(2);

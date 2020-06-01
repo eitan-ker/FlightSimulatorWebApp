@@ -23,7 +23,6 @@ ul li {
     cursor:pointer;
 }
 .flights-details {
-    width: 100vh;
     background: green;
     float: left;
     display: block;
