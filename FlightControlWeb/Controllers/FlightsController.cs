@@ -81,43 +81,65 @@ namespace FlightControlWeb.Controllers
                 double cameFromLong = flight.Initial_Location.Longitude;
                 foreach (Segment element in flight.Segments)
                 {
-
-                    if (dif_sec >= element.Timespan_seconds)
-                    {
-                        dif_sec -= element.Timespan_seconds;
-                    }
-                    else
-                    {
-                        double relative = (double)dif_sec / (double)element.Timespan_seconds;
-                        var flights = (IDictionary<string, Flight>)_cache.Get("flights");
-                        if (flights != null)
-                        {
-                            if (flights.ContainsKey(flight.ID))
-                            {
-                                flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                                flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
-                            }
-                        }
-                        var ex_flights = (List<Flight>)_cache.Get("externalFlights");
-                        if (ex_flights != null)
-                        {
-                            foreach (Flight _flight in ex_flights)
-                            {
-                                if (_flight.FlightID.CompareTo(flight.ID) == 0)
-                                {
-                                    _flight.Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                                    _flight.Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    cameFromLati = element.Latitude;
-                    cameFromLong = element.Longitude;
+                    LinearInterpolationLoop(dif_sec, element, flight, cameFromLati, cameFromLong);
                 }
             }
 
         }
+        private void LinearInterpolationLoop(int dif_sec, Segment element, FlightPlan flight,
+            double cameFromLati, double cameFromLong)
+        {
+            if (dif_sec >= element.Timespan_seconds)
+            {
+                dif_sec -= element.Timespan_seconds;
+            }
+            else
+            {
+                double relative = (double)dif_sec / (double)element.Timespan_seconds;
+                var flights = (IDictionary<string, Flight>)_cache.Get("flights");
+                if (flights != null)
+                {
+                    LinearInterpolationLoopIfContainsKey(flights, flight, cameFromLati, cameFromLong,
+                        relative, element);
+                }
+                var ex_flights = (List<Flight>)_cache.Get("externalFlights");
+                if (ex_flights != null)
+                {
+                    LinearInterpolationLoopElseLoop(ex_flights, flight, cameFromLati, cameFromLong,
+                        relative, element);
+                }
+                return;
+            }
+            cameFromLati = element.Latitude;
+            cameFromLong = element.Longitude;
+        }
+
+        private void LinearInterpolationLoopElseLoop (List<Flight> ex_flights, FlightPlan flight,
+            double cameFromLati, double cameFromLong, double relative, Segment element)
+        {
+            foreach (Flight _flight in ex_flights)
+            {
+                if (_flight.FlightID.CompareTo(flight.ID) == 0)
+                {
+                    _flight.Latitude = cameFromLati + (relative * (element.Latitude
+                        - cameFromLati));
+                    _flight.Longitude = cameFromLong + (relative * (element.Longitude
+                        - cameFromLong));
+                }
+            }
+        }
+
+        private void LinearInterpolationLoopIfContainsKey (IDictionary<string, Flight> flights,
+            FlightPlan flight, double cameFromLati, double cameFromLong, double relative,
+            Segment element)
+        {
+            if (flights.ContainsKey(flight.ID))
+            {
+                flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+            }
+        }
+
         [Route("flights")]
         [HttpGet]
         //get list of active internal flights based on Datetime given as a parameter
@@ -147,7 +169,8 @@ namespace FlightControlWeb.Controllers
                         if (!sync_all)
                         {
                             //add internal flights
-                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
+                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight>
+                                allFlights))
                             {
                                 // all flights are is_external false
 
@@ -163,7 +186,8 @@ namespace FlightControlWeb.Controllers
                         {
 
                             //add internal flights
-                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight> allFlights))
+                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight>
+                                allFlights))
                             {
                                 // all flights are is_external false
 
@@ -179,7 +203,8 @@ namespace FlightControlWeb.Controllers
                                 // }
                             }
                             //add external flights
-                            if (_cache.TryGetValue("externalFlights", out List<Flight> externalFlights))
+                            if (_cache.TryGetValue("externalFlights", out List<Flight>
+                                externalFlights))
                             {
                                 foreach (Flight _flight in externalFlights)
                                 {
@@ -255,7 +280,8 @@ namespace FlightControlWeb.Controllers
         private void SaveServerFlights(List<Flight> external_flights, string ServerId)
         {
             List<Flight> tempFlights = new List<Flight>(external_flights);
-            if (!_cache.TryGetValue("server_flights", out Dictionary<string, List<Flight>> serverFlight))
+            if (!_cache.TryGetValue("server_flights", out Dictionary<string, List<Flight>>
+                serverFlight))
             {
                 // serverFlight.Add(URL, external_flights);
                 serverFlight = new Dictionary<string, List<Flight>>()
@@ -404,7 +430,8 @@ namespace FlightControlWeb.Controllers
             string hour = ParseTString(hoursNum);
             string minutes = ParseTString(minutesNum);
             string seconds = ParseTString(secondsNum);
-            parsedTime.Append(year).Append("-").Append(month).Append("-").Append(day).Append("T").Append(hour).Append(":").Append(minutes).Append(":").Append(seconds).Append("Z");
+            parsedTime.Append(year).Append("-").Append(month).Append("-").Append(day).Append("T").
+                Append(hour).Append(":").Append(minutes).Append(":").Append(seconds).Append("Z");
             string finalParsedtime = parsedTime.ToString();
 
             return finalParsedtime;
@@ -427,7 +454,8 @@ namespace FlightControlWeb.Controllers
                         Flight external_flight = new Flight();
                         foreach (JProperty flight in elem.Children())
                         {
-                            external_flight.SetFlight(flight.Name.ToString(), flight.First.ToString());
+                            external_flight.SetFlight(flight.Name.ToString(),
+                                flight.First.ToString());
                         }
                         all_flights.Add(external_flight);
                     }
