@@ -387,22 +387,22 @@ namespace FlightControlWeb.Controllers
             //string[] words = time.Split(' ');
             //int count = 0;
             StringBuilder parsedTime = new StringBuilder(50);
-            int month = time.Month;
-            int day = time.Day;
-            int year = time.Year;
-            int hours = time.Hour;
-            int minutes = time.Minute;
-            int seconds = time.Second;
-            string _month = ParseTString(month);
-            string _day = ParseTString(day);
-            string _year = ParseTString(year);
-            string _hour = ParseTString(hours);
-            string _minutes = ParseTString(minutes);
-            string _seconds = ParseTString(seconds);
-            parsedTime.Append(_year).Append("-").Append(_month).Append("-").Append(_day).Append("T").Append(_hour).Append(":").Append(_minutes).Append(":").Append(_seconds).Append("Z");
-            string final_parsedtime = parsedTime.ToString();
+            int monthNum = time.Month;
+            int dayNum = time.Day;
+            int yearNum = time.Year;
+            int hoursNum = time.Hour;
+            int minutesNum = time.Minute;
+            int secondsNum = time.Second;
+            string month = ParseTString(monthNum);
+            string day = ParseTString(dayNum);
+            string year = ParseTString(yearNum);
+            string hour = ParseTString(hoursNum);
+            string minutes = ParseTString(minutesNum);
+            string seconds = ParseTString(secondsNum);
+            parsedTime.Append(year).Append("-").Append(month).Append("-").Append(day).Append("T").Append(hour).Append(":").Append(minutes).Append(":").Append(seconds).Append("Z");
+            string finalParsedtime = parsedTime.ToString();
 
-            return final_parsedtime;
+            return finalParsedtime;
         }
         private string ParseTString(int val)
         {
