@@ -114,7 +114,7 @@ namespace FlightControlWeb.Controllers
             cameFromLong = element.Longitude;
         }
 
-        private void LinearInterpolationLoopElseLoop (List<Flight> ex_flights, FlightPlan flight,
+        private void LinearInterpolationLoopElseLoop(List<Flight> ex_flights, FlightPlan flight,
             double cameFromLati, double cameFromLong, double relative, Segment element)
         {
             foreach (Flight _flight in ex_flights)
@@ -129,7 +129,7 @@ namespace FlightControlWeb.Controllers
             }
         }
 
-        private void LinearInterpolationLoopIfContainsKey (IDictionary<string, Flight> flights,
+        private void LinearInterpolationLoopIfContainsKey(IDictionary<string, Flight> flights,
             FlightPlan flight, double cameFromLati, double cameFromLong, double relative,
             Segment element)
         {
@@ -161,70 +161,78 @@ namespace FlightControlWeb.Controllers
                     var segments = flight.Segments.ToList();
                     //sum the total time of the journey of the plane through the segments
                     int totalTimeSpan = segments.Sum(v => v.Timespan_seconds);
-
-
-                    if (flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
-                    {
-
-                        if (!sync_all)
-                        {
-                            //add internal flights
-                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight>
-                                allFlights))
-                            {
-                                // all flights are is_external false
-
-                                /* if (!allFlights[flight.ID].Is_external) // local flights
-                                 { */
-                                flightslist.Add(allFlights[flight.ID]);
-                                LinearInterpolation(flight, utcDate);
-
-                                // }
-                            }
-                        }
-                        else
-                        {
-
-                            //add internal flights
-                            if (_cache.TryGetValue("flights", out Dictionary<string, Flight>
-                                allFlights))
-                            {
-                                // all flights are is_external false
-
-                                /* if (!allFlights[flight.ID].Is_external) // local flights
-                                 { */
-                                if (allFlights.TryGetValue(flight.ID, out Flight _flight))
-                                {
-                                    flightslist.Add(_flight);
-                                    LinearInterpolation(flight, utcDate);
-                                }
-
-
-                                // }
-                            }
-                            //add external flights
-                            if (_cache.TryGetValue("externalFlights", out List<Flight>
-                                externalFlights))
-                            {
-                                foreach (Flight _flight in externalFlights)
-                                {
-                                    if (_flight.FlightID.CompareTo(flight.ID) == 0)
-                                    {
-                                        flightslist.Add(_flight);
-                                    }
-                                }
-                                //  flightslist.Add(externalFlights[flight.ID]);
-                                LinearInterpolation(flight, utcDate);
-                            }
-                        }
-                    }
-
+                    GetFlightByDateTimeCheck(flight, totalTimeSpan, utcDate, sync_all,
+                        flightslist);
                 }));
 
                 return flightslist;
             }
             return null;
         }
+        private void GetFlightByDateTimeCheck(FlightPlan flight, int totalTimeSpan,
+            DateTime utcDate, bool sync_all, List<Flight> flightslist)
+        {
+            if (flight.Initial_Location.Date_Time.AddSeconds(totalTimeSpan) > utcDate)
+            {
+
+                if (!sync_all)
+                {
+                    GetFlightByDateTimeCheckNotSyncAll(flightslist, flight, utcDate);
+                }
+                else
+                {
+                    GetFlightByDateTimeCheckSyncAll(flightslist, flight, utcDate);
+                }
+            }
+        }
+
+        private void GetFlightByDateTimeCheckSyncAll(List<Flight> flightslist,
+            FlightPlan flight, DateTime utcDate)
+        {
+            //add internal flights
+            if (_cache.TryGetValue("flights", out Dictionary<string, Flight>
+                allFlights))
+            {
+                // all flights are is_external false
+
+                if (allFlights.TryGetValue(flight.ID, out Flight _flight))
+                {
+                    flightslist.Add(_flight);
+                    LinearInterpolation(flight, utcDate);
+                }
+            }
+            //add external flights
+            if (_cache.TryGetValue("externalFlights", out List<Flight>
+                externalFlights))
+            {
+                foreach (Flight _flight in externalFlights)
+                {
+                    GetFlightByDateTimeCheckSyncAllAddExFlight(flight, _flight, flightslist);
+                }
+                LinearInterpolation(flight, utcDate);
+            }
+        }
+
+        private void GetFlightByDateTimeCheckSyncAllAddExFlight(FlightPlan flight,
+            Flight _flight, List<Flight> flightslist)
+        {
+            if (_flight.FlightID.CompareTo(flight.ID) == 0)
+            {
+                flightslist.Add(_flight);
+            }
+        }
+        private void GetFlightByDateTimeCheckNotSyncAll(List<Flight> flightslist,
+            FlightPlan flight, DateTime utcDate)
+        {
+            //add internal flights
+            if (_cache.TryGetValue("flights", out Dictionary<string, Flight>
+                allFlights))
+            {
+                flightslist.Add(allFlights[flight.ID]);
+                LinearInterpolation(flight, utcDate);
+            }
+        }
+
         private void ImportExternalFlights()
         {
             _cache.TryGetValue("servers", out List<Server> allServers);
