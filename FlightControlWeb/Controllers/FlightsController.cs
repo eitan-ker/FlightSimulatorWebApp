@@ -219,21 +219,28 @@ namespace FlightControlWeb.Controllers
                         response = (HttpWebResponse)request.GetResponse();
                         string strResult = "";
                         List<Flight> external_flights;
-                        using (Stream stream = response.GetResponseStream())
+                        try
                         {
-                            StreamReader sr = new StreamReader(stream);
-                            strResult = sr.ReadToEnd();
-                            external_flights = MakeList(strResult);
-                            sr.Close();
+                            using (Stream stream = response.GetResponseStream())
+                            {
+                                StreamReader sr = new StreamReader(stream);
+                                strResult = sr.ReadToEnd();
+                                external_flights = MakeList(strResult);
+                                sr.Close();
+                            }
+                            // save in cache
+                            if (external_flights != null)
+                            {
+                                SaveExternalFlights(external_flights);
+                                FindExternalFlightPlans(external_flights, server.ServerUrl);
+                                SaveServerFlights(external_flights, server.ServerId);
+                            }
+                        } catch
+                        {
+                            Console.WriteLine("problem in reading da");
+
                         }
 
-                        // save in cache
-                        if (external_flights != null)
-                        {
-                            SaveExternalFlights(external_flights);
-                            FindExternalFlightPlans(external_flights, server.ServerUrl);
-                            SaveServerFlights(external_flights, server.ServerId);
-                        }
                     }
                 }
                 catch
@@ -289,42 +296,55 @@ namespace FlightControlWeb.Controllers
                 using (Stream stream = response.GetResponseStream())
                 {
                     StreamReader sr = new StreamReader(stream);
-                    strResult = sr.ReadToEnd();
-                    SaveExternalFlightPlans(strResult, flight.FlightID); // if flight plan doesn;t have the id
-                    sr.Close();
+                    try
+                    {
+                        strResult = sr.ReadToEnd();
+                        SaveExternalFlightPlans(strResult, flight.FlightID); // if flight plan doesn;t have the id
+                        sr.Close();
+                    } catch
+                    {
+                        Console.WriteLine("problem readnig from server");
+                    }
+                    
                 }
             }
         }
         private void SaveExternalFlightPlans(string flightPlanStr, string id)
         {
-            FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
-            if (flightPlan.Company_Name != null)
+            try
             {
-                flightPlan.ID = id;
-                if (!_cache.TryGetValue("flightplans", out List<FlightPlan> flightPlans))
+                FlightPlan flightPlan = JsonConvert.DeserializeObject<FlightPlan>(flightPlanStr);
+                if (flightPlan.Company_Name != null)
                 {
-                    flightPlans = new List<FlightPlan>();
-                    flightPlans.Add(flightPlan);
-                    _cache.Set("flightplans", flightPlans);
-                }
-                else
-                {
-                    int count = 0;
-                    foreach (FlightPlan plan in flightPlans) // if new flight id is different from all flights
+                    flightPlan.ID = id;
+                    if (!_cache.TryGetValue("flightplans", out List<FlightPlan> flightPlans))
                     {
-                        if (flightPlan.ID.CompareTo(plan.ID) != 0)
+                        flightPlans = new List<FlightPlan>();
+                        flightPlans.Add(flightPlan);
+                        _cache.Set("flightplans", flightPlans);
+                    }
+                    else
+                    {
+                        int count = 0;
+                        foreach (FlightPlan plan in flightPlans) // if new flight id is different from all flights
                         {
-                            count++;
+                            if (flightPlan.ID.CompareTo(plan.ID) != 0)
+                            {
+                                count++;
+                            }
+                        }
+                        if (count == flightPlans.Count)
+                        {
+                            flightPlans.Add(flightPlan);
+
                         }
                     }
-                    if (count == flightPlans.Count)
-                    {
-                        flightPlans.Add(flightPlan);
-
-                    }
                 }
+            } catch
+            {
+                Console.WriteLine("problem in saving external flight plan");
+
             }
-            
         }
         private void SaveExternalFlights(List<Flight> flights)
         {
