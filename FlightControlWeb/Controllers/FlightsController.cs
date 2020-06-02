@@ -77,66 +77,69 @@ namespace FlightControlWeb.Controllers
             int dif_sec = (int)dif.TotalSeconds;
             if (totalTimeSpan > dif_sec)
             {
-                double cameFromLati = flight.Initial_Location.Latitude;
-                double cameFromLong = flight.Initial_Location.Longitude;
-                foreach (Segment element in flight.Segments)
-                {
-                    LinearInterpolationLoop(dif_sec, element, flight, cameFromLati, cameFromLong);
-                }
+                LinearInterpolationIf(dif_sec, flight);
             }
-
-        }
-        private void LinearInterpolationLoop(int dif_sec, Segment element, FlightPlan flight,
-            double cameFromLati, double cameFromLong)
-        {
-            if (dif_sec >= element.Timespan_seconds)
-            {
-                dif_sec -= element.Timespan_seconds;
-            }
-            else
-            {
-                double relative = (double)dif_sec / (double)element.Timespan_seconds;
-                var flights = (IDictionary<string, Flight>)_cache.Get("flights");
-                if (flights != null)
-                {
-                    LinearInterpolationLoopIfContainsKey(flights, flight, cameFromLati, cameFromLong,
-                        relative, element);
-                }
-                var ex_flights = (List<Flight>)_cache.Get("externalFlights");
-                if (ex_flights != null)
-                {
-                    LinearInterpolationLoopElseLoop(ex_flights, flight, cameFromLati, cameFromLong,
-                        relative, element);
-                }
-                return;
-            }
-            cameFromLati = element.Latitude;
-            cameFromLong = element.Longitude;
         }
 
-        private void LinearInterpolationLoopElseLoop(List<Flight> ex_flights, FlightPlan flight,
-            double cameFromLati, double cameFromLong, double relative, Segment element)
+        private void LinearInterpolationIf(int dif_sec, FlightPlan flight)
         {
-            foreach (Flight _flight in ex_flights)
+            double cameFromLati = flight.Initial_Location.Latitude;
+            double cameFromLong = flight.Initial_Location.Longitude;
+            foreach (Segment element in flight.Segments)
             {
-                if (_flight.FlightID.CompareTo(flight.ID) == 0)
+                if (dif_sec >= element.Timespan_seconds)
                 {
-                    _flight.Latitude = cameFromLati + (relative * (element.Latitude
-                        - cameFromLati));
-                    _flight.Longitude = cameFromLong + (relative * (element.Longitude
-                        - cameFromLong));
+                    dif_sec -= element.Timespan_seconds;
+                }
+                else
+                {
+                    double relative = (double)dif_sec / (double)element.Timespan_seconds;
+                    var flights = (IDictionary<string, Flight>)_cache.Get("flights");
+                    LinearInterpolationIfElseIfNotNull(cameFromLati, cameFromLong, flight,
+                        element, flights, relative);
+                    var ex_flights = (List<Flight>)_cache.Get("externalFlights");
+                    LinearInterpolationIfElseIfExNotNull(cameFromLati, cameFromLong, flight,
+                        element, ex_flights, relative);
+                    break;
+                }
+                cameFromLati = element.Latitude;
+                cameFromLong = element.Longitude;
+            }
+        }
+        private void LinearInterpolationIfElseIfNotNull(double cameFromLati, double cameFromLong,
+            FlightPlan flight, Segment element, IDictionary<string, Flight> flights,
+            double relative)
+        {
+            if (flights != null)
+            {
+                if (flights.ContainsKey(flight.ID))
+                {
+                    flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                    flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
                 }
             }
         }
 
-        private void LinearInterpolationLoopIfContainsKey(IDictionary<string, Flight> flights,
-            FlightPlan flight, double cameFromLati, double cameFromLong, double relative,
-            Segment element)
+        private void LinearInterpolationIfElseIfExNotNull(double cameFromLati, double cameFromLong,
+            FlightPlan flight, Segment element, List<Flight> ex_flights, double relative)
         {
-            if (flights.ContainsKey(flight.ID))
+            if (ex_flights != null)
             {
-                flights[flight.ID].Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
-                flights[flight.ID].Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
+                foreach (Flight _flight in ex_flights)
+                {
+                    LinearInterpolationIfElseIfExNotNullCompare(cameFromLati, cameFromLong, flight,
+                        element, _flight, relative);
+                }
+            }
+        }
+
+        private void LinearInterpolationIfElseIfExNotNullCompare(double cameFromLati, double cameFromLong,
+            FlightPlan flight, Segment element, Flight _flight, double relative)
+        {
+            if (_flight.FlightID.CompareTo(flight.ID) == 0)
+            {
+                _flight.Latitude = cameFromLati + (relative * (element.Latitude - cameFromLati));
+                _flight.Longitude = cameFromLong + (relative * (element.Longitude - cameFromLong));
             }
         }
 
