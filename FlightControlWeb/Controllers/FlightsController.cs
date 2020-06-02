@@ -133,8 +133,9 @@ namespace FlightControlWeb.Controllers
             }
         }
 
-        private void LinearInterpolationIfElseIfExNotNullCompare(double cameFromLati, double cameFromLong,
-            FlightPlan flight, Segment element, Flight _flight, double relative)
+        private void LinearInterpolationIfElseIfExNotNullCompare(double cameFromLati,
+            double cameFromLong, FlightPlan flight, Segment element, Flight _flight,
+            double relative)
         {
             if (_flight.FlightID.CompareTo(flight.ID) == 0)
             {
@@ -390,7 +391,8 @@ namespace FlightControlWeb.Controllers
                 }
             }
         }
-        private int SaveExternalFlightPlansIfElseLoopIf(FlightPlan flightPlan, FlightPlan plan, int count)
+        private int SaveExternalFlightPlansIfElseLoopIf(FlightPlan flightPlan, FlightPlan plan,
+            int count)
         {
             if (flightPlan.ID.CompareTo(plan.ID) != 0)
             {
@@ -409,32 +411,51 @@ namespace FlightControlWeb.Controllers
             {
                 if (external_flights.Count == 0)
                 {
-                    foreach (Flight flight in flights)
-                    {
-                        external_flights.Add(flight);
-                    }
-
+                    SaveExternalFlightsElseIfLoop(flights, external_flights);
                 }
                 else
                 {
-                    foreach (Flight flight in flights)
-                    {
-                        int count = 0;
-                        foreach (Flight ext_flight in external_flights) // if new flight id is different from all flights
-                        {
-                            if (ext_flight.FlightID.CompareTo(flight.FlightID) != 0)
-                            {
-                                count++;
-                            }
-                        }
-                        if (count == external_flights.Count)
-                        {
-                            external_flights.Add(flight);
-                        }
-                    }
+                    SaveExternalFlightsElseElseLoop(flights, external_flights);
                 }
 
             }
+        }
+
+        private void SaveExternalFlightsElseIfLoop(List<Flight> flights,
+            List<Flight> external_flights)
+        {
+            foreach (Flight flight in flights)
+            {
+                external_flights.Add(flight);
+            }
+        }
+
+        private void SaveExternalFlightsElseElseLoop (List<Flight> flights,
+            List<Flight> external_flights)
+        {
+            foreach (Flight flight in flights)
+            {
+                int count = 0;
+                foreach (Flight ext_flight in external_flights) // if new flight id is different from all flights
+                {
+                    count  = count + SaveExternalFlightsElseElseLoopCompare(ext_flight, count,
+                        flight);
+                }
+                if (count == external_flights.Count)
+                {
+                    external_flights.Add(flight);
+                }
+            }
+        }
+
+        private int SaveExternalFlightsElseElseLoopCompare(Flight ext_flight, int count,
+            Flight flight)
+        {
+            if (ext_flight.FlightID.CompareTo(flight.FlightID) != 0)
+            {
+                count++;
+            }
+            return count;
         }
         private string ParseTime(DateTime time)
         {
@@ -472,16 +493,7 @@ namespace FlightControlWeb.Controllers
                 // throws exception when server has no flights - stops program
                 if (json_convert != null) // if not empty
                 {
-                    foreach (var elem in json_convert.Children())
-                    {
-                        Flight external_flight = new Flight();
-                        foreach (JProperty flight in elem.Children())
-                        {
-                            external_flight.SetFlight(flight.Name.ToString(),
-                                flight.First.ToString());
-                        }
-                        all_flights.Add(external_flight);
-                    }
+                    MakeListTryIf(json_convert, all_flights);
                 }
                 return all_flights;
             }
@@ -489,7 +501,19 @@ namespace FlightControlWeb.Controllers
             {
                 return null;
             }
-
+        }
+        private void MakeListTryIf(JArray json_convert, List<Flight> all_flights)
+        {
+            foreach (var elem in json_convert.Children())
+            {
+                Flight external_flight = new Flight();
+                foreach (JProperty flight in elem.Children())
+                {
+                    external_flight.SetFlight(flight.Name.ToString(),
+                        flight.First.ToString());
+                }
+                all_flights.Add(external_flight);
+            }
         }
     }
 }
